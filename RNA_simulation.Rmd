@@ -41,7 +41,7 @@ reverse_RNA = function(RNA){ #This function reverses the RNA sequence
   return(reversed_string)
 }
 
-calc_mass = function(fragment){ #calculate the mass of a fragment
+calc_mass = function(fragment, fragment_type){ #calculate the mass of a fragment
   mass = 0
   for(i in 1:nchar(fragment)){
     for(j in 1:nrow(dictionary)){
@@ -50,6 +50,11 @@ calc_mass = function(fragment){ #calculate the mass of a fragment
         break
       }
     }
+  }
+  if(fragment_type == "five"){
+    mass = mass + 18.015
+  } else {
+    mass = mass - -61.95579
   }
   return(mass)
 }
@@ -75,8 +80,10 @@ fragment_df = data.frame(fragment = NA) %>%
   drop_na()
 
 for(i in 1:100){
-  fragment_5 = generate_fragment(RNA_5)
-  fragment_3 = generate_fragment(RNA_3)
+  fragment_5 = generate_fragment(RNA_5) %>% 
+    mutate(ladder_type = "five")
+  fragment_3 = generate_fragment(RNA_3) %>% 
+    mutate(ladder_type = "three")
   fragment_df = rbind(fragment_df, fragment_3, fragment_5)
 }
 
@@ -86,7 +93,7 @@ fragment_df = distinct(fragment_df) %>%
 df = data.frame(monoisotopic_mass = NA, apex_RT = NA, sum_intensity = NA)
 
 for(i in 1: nrow(fragment_df)){
-  df[i, 1] = calc_mass(fragment_df[i, 1])
+  df[i, 1] = calc_mass(fragment_df[i, 1], fragment_type = fragment_df[i, 2])
   df[i, 2] = runif(1, min = 1, max = 15)
   df[i, 3] = runif(1, min = 10^4, max = 10^8)
 }
