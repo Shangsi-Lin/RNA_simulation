@@ -1,0 +1,70 @@
+---
+title: "RNA_simulation"
+author: "Shangsi Lin"
+date: "2024-11-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(readxl)
+```
+
+```{r set_up}
+load_dictionary = function(dictionary_name, row_chosen){
+  read_xlsx(dictionary_name, n_max = row_chosen)
+}
+
+dictionary = load_dictionary("dictionary.xlsx", 4)
+
+nrow_dictionary = nrow(dictionary)
+```
+
+
+```{r functions}
+simulate_RNA = function(length){ #This function generates a completely random RNA sequence
+  RNA = ""
+  for(i in 1:length){
+    new_base = dictionary[sample(1 : nrow_dictionary, 1), 1]
+    RNA = paste0(RNA, new_base)
+  }
+  return(RNA)
+}
+
+reverse_RNA = function(RNA){ #This function reverses the RNA sequence
+  char_vector = strsplit(RNA, NULL)[[1]]
+  reversed_char_vector = rev(char_vector)
+  reversed_string = paste(reversed_char_vector, collapse = "")
+  return(reversed_string)
+}
+
+calc_mass = function(fragment){ #calculate the mass of a fragment
+  fragment = "C"
+  mass = 0
+  for(i in 1:nchar(fragment)){
+    for(j in 1:nrow(dictionary)){
+      if(substr(fragment, start = i, stop = i) == dictionary[j, 1]){
+        mass = mass + dictionary[j, 2]
+        break
+      }
+    }
+  }
+  mass
+}
+
+generate_fragment = function(RNA){ #This function generates fragment
+  cutpoint = sample(1 : nchar(RNA), 1)
+  fragment_1 = substring(RNA, cutpoint)
+  fragment_2 = substr(RNA, start = 0, stop = cutpoint - 1)
+}
+```
+
+```{r simulate_dataset}
+set.seed(37)
+RNA_5 = simulate_RNA(20)
+RNA_3 = reverse_RNA(RNA_5)
+
+```
+
