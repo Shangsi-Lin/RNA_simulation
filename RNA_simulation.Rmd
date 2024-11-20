@@ -31,6 +31,7 @@ simulate_RNA = function(length){ #This function generates a completely random RN
     new_base = dictionary[sample(1 : nrow_dictionary, 1), 1]
     RNA = paste0(RNA, new_base)
   }
+  print(RNA)
   return(RNA)
 }
 
@@ -69,36 +70,46 @@ generate_fragment = function(RNA){ #This function generates fragment based on th
     mutate(fragment_type = c("three", "five"))
   return(return_df)
 }
+
+simulate_hydrolysis = function(RNA, times){
+  
+  fragment_df = data.frame(fragment = NA) %>% 
+  drop_na()
+  
+  for(i in 1:times){
+    new_fragments = generate_fragment(RNA)
+    fragment_df = rbind(fragment_df, new_fragments)
+  }
+  
+  fragment_df = distinct(fragment_df) %>% 
+  filter(fragment != "")
+  
+  df = data.frame(monoisotopic_mass = NA, apex_RT = NA, sum_intensity = NA, relative_abundance = NA) %>% 
+  drop_na()
+  
+  for(i in 1: nrow(fragment_df)){
+    df[i, 1] = calc_mass(fragment_df[i, 1], fragment_type = fragment_df[i, 2])
+    df[i, 2] = runif(1, min = 1, max = 15)
+    df[i, 3] = runif(1, min = 10^4, max = 10^8)
+    df[i, 4] = runif(1, min = 0, max = 100)
+  }
+  
+  return(df)
+}
 ```
 
 ```{r simulate_dataset}
 set.seed(37)
-RNA = simulate_RNA(20)
 
-
-fragment_df = data.frame(fragment = NA) %>% 
-  drop_na()
-
-for(i in 1:100){
-  new_fragments = generate_fragment(RNA)
-  fragment_df = rbind(fragment_df, new_fragments)
-}
-
-fragment_df = distinct(fragment_df) %>% 
-  filter(fragment != "")
-
-df = data.frame(monoisotopic_mass = NA, apex_RT = NA, sum_intensity = NA, relative_abundance = NA) %>% 
-  drop_na()
-
-for(i in 1: nrow(fragment_df)){
-  df[i, 1] = calc_mass(fragment_df[i, 1], fragment_type = fragment_df[i, 2])
-  df[i, 2] = runif(1, min = 1, max = 15)
-  df[i, 3] = runif(1, min = 10^4, max = 10^8)
-  df[i, 4] = runif(1, min = 0, max = 100)
-}
+RNA_20 = simulate_RNA(20)
+df_20 = simulate_hydrolysis(RNA_20, 100)
+RNA_30 = simulate_RNA(30)
+df_30 = simulate_hydrolysis(RNA_30, 100)
+RNA_100 = simulate_RNA(100)
+df_100 = simulate_hydrolysis(RNA_100, 100)
 ```
 
 ```{r}
-write_xlsx(df, path = "simulated_data.xlsx")
+write_xlsx(rbind(df_20, df_30, df_100), path = "simulated_data.xlsx")
 ```
 
