@@ -3,6 +3,7 @@ library(tidyverse)
 library(readxl)
 library(writexl)
 library(ggrepel)
+library(plotly)
 
 load_dictionary = function(row_chosen){ # the dictionary file name has to be dictionary.xlsx
   print("Loading dictionary.xlsx")
@@ -189,14 +190,14 @@ ppm = function(observed, theo){
   }
 }
 
-blind_sequencing = function(){
+blind_sequencing = function(df){
   n_iteration = 0
   output_df = data.frame(matrix(ncol = 5))
   colnames(output_df) = c("base_name", "monoisotopic_mass", "sum_intensity", "apex_rt", "n_iteration")
   output_df = output_df %>% 
     drop_na()
   exhaustive_level = 0
-  sequenced_df = combined_df %>% 
+  sequenced_df = df %>% 
     select(monoisotopic_mass, apex_rt, sum_intensity, number) %>% 
     arrange(desc(monoisotopic_mass))
   while(nrow(sequenced_df) > 0){

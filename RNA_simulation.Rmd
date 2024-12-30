@@ -9,7 +9,7 @@ output: html_document
 source("RNA_simulation.R")
 ```
 
-```{r}
+```{r create_data_frame}
 set.seed(1)
 simulated_RNA_A = perfect_ladder("AAACCGUUACCAUUACUGAG", 1, 300000, 50000)
 print(paste(rev(strsplit("AAACCGUUACCAUUACUGAG", NULL)[[1]]), collapse = ""))
@@ -23,7 +23,7 @@ combined_df = rbind(simulated_RNA_A, simulated_RNA_B, simulated_RNA_C)
 ```
 
 ```{r}
-output_df = blind_sequencing()
+output_df = blind_sequencing(combined_df)
 
 iteration_length3 = output_df %>% 
   group_by(n_iteration) %>% 
@@ -44,7 +44,17 @@ for(i in 1:nrow(temp)){
   }
 }
 
-ggplot(temp, aes(x = monoisotopic_mass, y = apex_rt, color = ladder_number)) +
+
+temp = mutate(temp, RNA_number = "1")
+for(i in 1:nrow(temp)){
+  for(j in 1:nrow(combined_df)){
+    if(combined_df[j, 2] == temp[i, 2]){
+      temp[i, 7] = combined_df[j, 5]
+    }
+  }
+}
+
+ggplot(temp, aes(x = monoisotopic_mass, y = apex_rt, color = RNA_number)) +
   geom_line(aes(group = ladder_number),color = "gray", size = 1) +
   geom_point(
         alpha=0.9,
@@ -102,7 +112,7 @@ for(i in 1:nrow(text_sequence_df)){
   print(paste(text_sequence_df$ladder_number[i], ":", text_sequence_df$sequence[i]))
 }
 
-ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = ladder_number)) + 
+ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = RNA_number)) + 
   geom_point(
         alpha=0.9,
         size=3
@@ -110,7 +120,7 @@ ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = ladder_number)) +
   geom_line(aes(group = ladder_number),color = "gray", size = 1) +
   theme_bw() +
   labs(
-    title = paste("2-D Mass versus Sum Intensity Plot"),
+    title = paste("2-D Mass versus Sum Intensity Plot for 3 20mer simulation"),
     x = "Monoisotopic Mass(Da)",
     y = "Sum Intensity"
   ) +
@@ -124,5 +134,139 @@ ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = ladder_number)) +
       hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
     ) 
   )
+
+temp %>% 
+  plot_ly( x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity, color = ~RNA_number) %>% 
+  layout(title = "3D presentation of simulated 3 RNA 20mer")
+```
+### simulate longer length RNAs
+```{r}
+set.seed(2)
+RNA_100A = simulate_RNA(100)
+RNA_100B = simulate_RNA(100)
+simulated_RNA_100A = perfect_ladder(RNA_100A, 4, 500000, 50000)
+simulated_RNA_100A$apex_rt = simulated_RNA_100A$apex_rt * 2
+print(paste(rev(strsplit(RNA_100A, NULL)[[1]]), collapse = ""))
+simulated_RNA_100B = perfect_ladder(RNA_100B, 5, 250000, 50000)
+print(paste(rev(strsplit(RNA_100B, NULL)[[1]]), collapse = ""))
+simulated_RNA_100B$monoisotopic_mass = simulated_RNA_100B$monoisotopic_mass - 0.01
+
+combined_100df = rbind(simulated_RNA_100A, simulated_RNA_100B) 
+
+output_df = blind_sequencing(combined_100df)
+
+iteration_length3 = output_df %>% 
+  group_by(n_iteration) %>% 
+  count() %>% 
+  filter(n > 3) %>% 
+  ungroup() %>% 
+  mutate(ladder_number = paste0("ladder", row_number()))
+
+temp = output_df %>% 
+  filter(n_iteration %in% iteration_length3$n_iteration) %>% 
+  mutate(ladder_number = "") 
+
+for(i in 1:nrow(temp)){
+  for(j in 1:nrow(iteration_length3)){
+      if(temp[i,5] == iteration_length3[j,1]){
+        temp[i,6] = iteration_length3[j,3]
+      }
+  }
+}
+
+
+temp = mutate(temp, RNA_number = "1")
+for(i in 1:nrow(temp)){
+  for(j in 1:nrow(combined_100df)){
+    if(combined_100df[j, 2] == temp[i, 2]){
+      temp[i, 7] = combined_100df[j, 5]
+    }
+  }
+}
+
+ggplot(temp, aes(x = monoisotopic_mass, y = apex_rt, color = RNA_number)) +
+  geom_line(aes(group = ladder_number),color = "gray", size = 1) +
+  geom_point(
+        alpha=0.9,
+        size=3) +
+  theme_bw() +
+  labs(
+    title = paste("2-D Mass versus Retention Time Plot"),
+    x = "Monoisotopic Mass(Da)",
+    y = "Rentention Time(min)"
+  ) +
+  theme(plot.title = element_text(
+      size = 14,        
+      face = "bold",    
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    )
+  ) +
+  geom_text_repel(
+    aes(label = base_name),  
+    size = 3,               
+    color = "black",        
+    max.overlaps = 70       
+  )
+
+text_sequence_df = temp 
+
+text_sequence_df = text_sequence_df %>% 
+  mutate(current_sequence = text_sequence_df$base_name[1])
+
+  for(i in 2:(nrow(text_sequence_df))) {
+    if(text_sequence_df[i, 5] == text_sequence_df[i-1, 5]){
+      text_sequence_df[i, 8] = paste0(text_sequence_df[i-1, 8], text_sequence_df[i,1])
+    } else {
+      text_sequence_df[i, 8] = text_sequence_df[i, 1]
+    }
+  }
+
+for(i in 2:nrow(text_sequence_df)){
+  if(text_sequence_df[i, 5] == text_sequence_df[i-1, 5]){
+    text_sequence_df[i-1, 8] = ""
+  }
+}
+
+text_sequence_df = text_sequence_df %>% filter(current_sequence != "") %>% 
+  rename(sequence = current_sequence, starting_mass = monoisotopic_mass) %>% 
+  mutate(sequence = gsub("High", "", sequence)) %>% 
+  select(sequence, n_iteration, ladder_number, starting_mass)
+
+for(i in 1:nrow(text_sequence_df)){
+  text_sequence_df[i,1] = paste(rev(strsplit(text_sequence_df$sequence[i], NULL)[[1]]), collapse = "")
+}
+
+cat("Printed below are all the sequence generated with length longer than 3 nucleotides under blind sequencing setting:")
+
+for(i in 1:nrow(text_sequence_df)){
+  print(paste(text_sequence_df$ladder_number[i], ":", text_sequence_df$sequence[i]))
+}
+
+ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = RNA_number)) + 
+  geom_point(
+        alpha=0.9,
+        size=3
+        ) +
+  geom_line(aes(group = ladder_number),color = "gray", size = 1) +
+  theme_bw() +
+  labs(
+    title = paste("2-D Mass versus Sum Intensity Plot for 3 20mer simulation"),
+    x = "Monoisotopic Mass(Da)",
+    y = "Sum Intensity"
+  ) +
+    geom_text_repel(aes(label = base_name),             
+    vjust = -1,                         
+    size = 3,                           
+    color = "black") +
+  theme(plot.title = element_text(
+      size = 12,        # Font size
+      face = "bold",    # Font style: "bold", "italic", "bold.italic"
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    ) 
+  )
+
+temp %>% 
+  plot_ly( x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity, color = ~RNA_number) %>% 
+  layout(title = "3D presentation of simulated 2 RNA 100mer")
 ```
 
