@@ -10,7 +10,7 @@ load_dictionary = function(row_chosen){ # the dictionary file name has to be dic
   read_xlsx("dictionary.xlsx", n_max = row_chosen)
 }
 
-dictionary = load_dictionary(4)
+dictionary = load_dictionary(11)
 
 simulate_RNA = function(length){ #This function generates a completely random RNA sequence with user defined length
   RNA = ""

@@ -138,6 +138,69 @@ ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = RNA_number)) +
 temp %>% 
   plot_ly( x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity, color = ~RNA_number) %>% 
   layout(title = "3D presentation of simulated 3 RNA 20mer")
+
+temp = temp %>% mutate(position = c(19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)) 
+
+ggplot(temp, aes(x = factor(position), y = sum_intensity, fill = factor(RNA_number))) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(
+    title = "Bar Plot of Sum Intensity by Position for the simulated three RNA 20mers",
+    x = "Position",
+    y = "Sum Intensity",
+    fill = "RNA Number"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+plot_ly(
+  data = temp,
+  x = ~monoisotopic_mass,
+  y = ~apex_rt,
+  z = ~sum_intensity,
+  color = ~factor(RNA_number), # Use RNA_number for coloring
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(size = 10) # Adjust size to represent "bar-like" structures
+)
+
+temp[20,3] = 945000
+temp[59,3] = 669828
+temp[98,3] = 497797
+
+bar_data <- lapply(1:nrow(temp), function(i) {
+  list(
+    x = c(temp$monoisotopic_mass[i], temp$monoisotopic_mass[i]),
+    y = c(temp$apex_rt[i], temp$apex_rt[i]),
+    z = c(0, temp$sum_intensity[i]),
+    type = "scatter3d",
+    mode = "lines",
+    line = list(width = 10, color = temp$RNA_number[i])
+  )
+})
+
+# Combine all bars into one plot
+fig <- plot_ly()
+
+for (bar in bar_data) {
+  fig <- fig %>% add_trace(
+    x = bar$x,
+    y = bar$y,
+    z = bar$z,
+    type = bar$type,
+    mode = bar$mode,
+    line = bar$line,
+    color = bar$line$color
+  )
+}
+
+fig <- fig %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "Monoisotopic Mass"),
+      yaxis = list(title = "Apex RT"),
+      zaxis = list(title = "Sum Intensity")
+    )
+  )
 ```
 ### simulate longer length RNAs
 ```{r}
@@ -268,5 +331,81 @@ ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = RNA_number)) +
 temp %>% 
   plot_ly( x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity, color = ~RNA_number) %>% 
   layout(title = "3D presentation of simulated 2 RNA 100mer")
+```
+
+```{r}
+set.seed(1)
+RNA_A = simulate_RNA(20)
+RNA_B = simulate_RNA(40)
+RNA_C = simulate_RNA(60)
+RNA_D = simulate_RNA(80)
+RNA_E = simulate_RNA(100)
+simulated_RNA_A = perfect_ladder(RNA_A, 1, 300000, 50000)
+simulated_RNA_B = perfect_ladder(RNA_B, 2, 200000, 50000)
+simulated_RNA_C = perfect_ladder(RNA_C, 3, 100000, 50000)
+simulated_RNA_D = perfect_ladder(RNA_D, 4, 400000, 50000)
+simulated_RNA_E = perfect_ladder(RNA_E, 5, 500000, 50000)
+combined_df = rbind(simulated_RNA_A, simulated_RNA_B, simulated_RNA_C, simulated_RNA_D, simulated_RNA_E) 
+
+output_df = blind_sequencing(combined_df)
+
+iteration_length3 = output_df %>% 
+  group_by(n_iteration) %>% 
+  count() %>% 
+  filter(n > 3) %>% 
+  ungroup() %>% 
+  mutate(ladder_number = paste0("ladder", row_number()))
+
+temp = output_df %>% 
+  filter(n_iteration %in% iteration_length3$n_iteration) %>% 
+  mutate(ladder_number = "") 
+
+for(i in 1:nrow(temp)){
+  for(j in 1:nrow(iteration_length3)){
+      if(temp[i,5] == iteration_length3[j,1]){
+        temp[i,6] = iteration_length3[j,3]
+      }
+  }
+}
+
+
+temp = mutate(temp, RNA_number = "1")
+for(i in 1:nrow(temp)){
+  for(j in 1:nrow(combined_df)){
+    if(combined_df[j, 2] == temp[i, 2]){
+      temp[i, 7] = combined_df[j, 5]
+    }
+  }
+}
+
+ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = RNA_number)) + 
+  geom_point(
+        alpha=0.9,
+        size=3
+        ) +
+  geom_line(aes(group = ladder_number),color = "gray", size = 1) +
+  theme_bw() +
+  labs(
+    title = paste("2-D Mass versus Sum Intensity Plot for 3 20mer simulation"),
+    x = "Monoisotopic Mass(Da)",
+    y = "Sum Intensity"
+  ) +
+    geom_text_repel(aes(label = base_name),             
+    vjust = -1,                         
+    size = 3,                           
+    color = "black") +
+  theme(plot.title = element_text(
+      size = 12,        # Font size
+      face = "bold",    # Font style: "bold", "italic", "bold.italic"
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    ) 
+  )
+
+ggplot(temp, aes(x=monoisotopic_mass, y=sum_intensity, color = "gray")) + 
+  geom_point(
+        alpha=0.9,
+        size=3
+        ) +
+  theme_bw()
 ```
 
