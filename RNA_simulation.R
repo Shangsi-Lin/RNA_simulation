@@ -81,3 +81,23 @@ perfect_fragments = function(input_sequence, name_of_RNA) {
   temp_df_final = generate_mass(temp_df)
   return(temp_df_final)
 }
+
+### THE CODE ABOVE IS TO SIMULATE RNA LADDER MASSES
+### THE CODE BELOW IS TO TRAIN MODEL TO PREDICT RETERNTION TIME BASED ON MASS
+
+train_df = rbind(read_xlsx("Data/250115/Phe_1FA_10pmol_T01_250114_LSS.xlsx") %>% 
+  drop_na() %>% 
+  janitor::clean_names(),
+  
+  read_xlsx("Data/250115/Phe_1FA_15pmol_T01_250114_LSS.xlsx") %>% 
+    drop_na() %>% 
+    janitor::clean_names(),
+
+  read_xlsx("Data/250115/Phe_1FA_20pmol_T01_250114_LSS.xlsx") %>% 
+    drop_na() %>% 
+    janitor::clean_names(),
+
+  read_xlsx("Data/250115/Phe_50FA_15pmol_T01_250114_LSS.xlsx") %>% 
+    drop_na() %>% 
+    janitor::clean_names())
+
