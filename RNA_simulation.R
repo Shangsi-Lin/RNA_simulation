@@ -4,6 +4,7 @@ library(readxl)
 library(writexl)
 library(ggrepel)
 library(plotly)
+library(randomForest)
 
   #Load the dictionary, containing the most common 9 nucleotides(AUCG, their methylated form, and D)
 dictionary = read_xlsx("Data/dictionary.xlsx") %>% 
@@ -77,7 +78,7 @@ generate_mass = function(ladder_df){
 
 # This function generates the perfect fragments data frame for an RNA of user's choice
 perfect_fragments = function(input_sequence, name_of_RNA) {
-  temp_df = generate_ladder("AAACCGUUACCAUUACUGAG", "RNA_A")
+  temp_df = generate_ladder(input_sequence, name_of_RNA)
   temp_df_final = generate_mass(temp_df)
   return(temp_df_final)
 }
@@ -101,3 +102,10 @@ train_df = rbind(read_xlsx("Data/250115/Phe_1FA_10pmol_T01_250114_LSS.xlsx") %>%
     drop_na() %>% 
     janitor::clean_names())
 
+# Fit a Random Forest model
+rf_model <- randomForest(apex_rt ~ monoisotopic_mass, data = train_df, ntree = 500)
+
+# Predict on the training data
+train_df$predicted_apex_rt_rf <- predict(rf_model, train_df)
+
+# Visualize predictions

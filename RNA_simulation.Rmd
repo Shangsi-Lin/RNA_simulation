@@ -12,6 +12,10 @@ source("RNA_simulation.R")
 
 
 ```{r}
-test_df = perfect_fragments(simulate_RNA(10), "Simulated_RNA_1")
+test_df = perfect_fragments(simulate_RNA(80), "Simulated_RNA_1")
+test_df$apex_rt = predict(rf_model, test_df)
+ggplot(test_df, aes(x=monoisotopic_mass, y = apex_rt)) +
+  geom_point(aes(y = apex_rt), color = "red", size = 2, alpha = 0.7) +
+  theme_bw()
 ```
 
