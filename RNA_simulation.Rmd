@@ -12,10 +12,14 @@ source("RNA_simulation.R")
 
 
 ```{r}
-test_df = perfect_fragments(simulate_RNA(80), "Simulated_RNA_1")
-test_df$apex_rt = predict(rf_model, test_df)
-ggplot(test_df, aes(x=monoisotopic_mass, y = apex_rt)) +
-  geom_point(aes(y = apex_rt), color = "red", size = 2, alpha = 0.7) +
-  theme_bw()
+simulated_76 = generate_dataset(76, "mimic_76", 50000)
+simulated_77 = generate_dataset(77, "mimic_77", 60000)
+simulated_78 = generate_dataset(78, "mimic_78", 70000)
+simulated_all = rbind(simulated_76, simulated_77, simulated_78)
+ggplot(simulated_all, aes(x= monoisotopic_mass, y=apex_rt, color = RNA_name)) + 
+  geom_point(size = 1, alpha = 0.5)
+ggplot(simulated_all, aes(x= monoisotopic_mass, y=sum_intensity, color = RNA_name, group=interaction(RNA_name, ladder_type))) + 
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(alpha=0.3)
 ```
 
