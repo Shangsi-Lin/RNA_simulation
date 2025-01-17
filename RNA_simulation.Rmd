@@ -12,11 +12,9 @@ source("RNA_simulation.R")
 
 
 ```{r}
-simulated_76 = 
-simulated_77 = 
-simulated_78 = generate_dataset(78, "mimic_78", 70000)
-simulated_all = rbind(generate_dataset(76, "mimic_76", 50000),
-                      simulated_77, simulated_78)
+simulated_all = rbind(generate_dataset(76, "mimic_76", 90000),
+                      generate_dataset(77, "mimic_77", 60000), 
+                      generate_dataset(78, "mimic_78", 30000))
 ggplot(simulated_all, aes(x= monoisotopic_mass, y=apex_rt, color = RNA_name)) + 
   geom_point(size = 1, alpha = 0.5)
 ggplot(simulated_all, aes(x= monoisotopic_mass, y=sum_intensity, color = RNA_name, group=interaction(RNA_name, ladder_type))) + 
