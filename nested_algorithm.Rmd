@@ -1,0 +1,98 @@
+---
+title: "nested_algorithm"
+author: "Shangsi Lin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("nested_algorithm.R")
+df = simulated_all %>% 
+  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
+  arrange(desc(monoisotopic_mass))
+dictionary = dictionary %>% 
+  rename(name = base_name, mass = monoisotopic_mass)
+```
+
+```{r}
+mass_bound = max(dictionary$mass + 1)
+n_iteration = 0
+output_df = data.frame(matrix(ncol = 5))
+colnames(output_df) = c("base_name", "monoisotopic_mass", "sum_intensity", "apex_rt", "n_iteration")
+output_df = output_df %>% 
+  drop_na()
+exhaustive_level = quantile(df$sum_intensity, 0.001)
+sequenced_df = df
+while(nrow(sequenced_df) > 1){
+  n_iteration = n_iteration + 1
+  highest_intensity_mass = sequenced_df %>%
+    filter(sum_intensity == max(sum_intensity)) %>% 
+    filter(monoisotopic_mass == max(monoisotopic_mass)) #in case if there are two data points with same level of intensity
+  if(highest_intensity_mass$sum_intensity < exhaustive_level) { #exhaustion reached
+    break
+  }
+  loop_down_df = filter(sequenced_df, monoisotopic_mass <= highest_intensity_mass$monoisotopic_mass)
+  loop_up_df = filter(sequenced_df, monoisotopic_mass >= highest_intensity_mass$monoisotopic_mass)
+  temp_df = data.frame(matrix(ncol = 5))
+  colnames(temp_df) = c("base_name", "monoisotopic_mass", "sum_intensity", "apex_rt", "n_iteration")
+  temp_df = temp_df %>% 
+  drop_na()
+  temp_df = loop_up_match(loop_up_df, mass_bound, dictionary, temp_df, n_iteration, begin = FALSE) %>% 
+    arrange(desc(monoisotopic_mass))
+  output_df = rbind(output_df, temp_df)
+  output_df = loop_down_match(loop_down_df, mass_bound, dictionary, output_df, n_iteration, begin = FALSE)
+  suppressMessages({ #suppress the messages
+    sequenced_df = anti_join(sequenced_df, output_df, by = "monoisotopic_mass")
+    sequenced_df = anti_join(sequenced_df, highest_intensity_mass)
+  })
+}
+
+output_df = output_df %>% #make sure every row is unique, remove the replication of two high mass points in one iteration
+  distinct()
+
+#plot out all the ladders longer or equal to 3 nucleotides
+iteration_length3 = output_df %>% 
+  group_by(n_iteration) %>% 
+  count() %>% 
+  filter(n > 1) %>% 
+  ungroup() %>% 
+  mutate(ladder_number = paste0("ladder", row_number()))
+
+temp = output_df %>% 
+  filter(n_iteration %in% iteration_length3$n_iteration) %>% 
+  mutate(ladder_number = "") 
+
+for(i in 1:nrow(temp)){
+  for(j in 1:nrow(iteration_length3)){
+      if(temp[i,5] == iteration_length3[j,1]){
+        temp[i,6] = iteration_length3[j,3]
+      }
+  }
+}
+
+ggplot(temp , aes(x = monoisotopic_mass, y = apex_rt, color = ladder_number)) +
+  geom_line(aes(group = ladder_number),color = "gray", size = 1) +
+  geom_point(
+        alpha=0.9,
+        size=3) +
+  theme_bw() +
+  labs(
+    title = paste("All ladder generated"),
+    x = "Monoisotopic Mass(Da)",
+    y = "Rentention Time(min)"
+  ) +
+  theme(plot.title = element_text(
+      size = 14,        
+      face = "bold",    
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    )
+  ) +
+  geom_text_repel(
+    aes(label = base_name),  
+    size = 3,               
+    color = "black",        
+    max.overlaps = 70       
+  )
+```
+
