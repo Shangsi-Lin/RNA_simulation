@@ -12,13 +12,21 @@ source("RNA_simulation.R")
 
 
 ```{r}
-simulated_all = rbind(generate_dataset(76, "mimic_76", 90000),
-                      generate_dataset(77, "mimic_77", 60000), 
-                      generate_dataset(78, "mimic_78", 30000))
+set.seed(1)
+simulated_all = generate_dataset(71, "simulated_71", 30000)
+for(i in 1:9){
+  simulated_all = rbind(simulated_all, generate_dataset((71 + i), paste0("simulated_", as.character(i + 71)), i * 10000 + 30000))
+}
 ggplot(simulated_all, aes(x= monoisotopic_mass, y=apex_rt, color = RNA_name)) + 
-  geom_point(size = 1, alpha = 0.5)
+  geom_point(size = 1, alpha = 0.5) + 
+  theme_bw() +
+  labs(x = "Monoisotopic Mass (Da)", y = "Retention Time (min)") +
+  scale_x_continuous(breaks = c(0, 5000, 10000, 15000, 20000, 25000))
 ggplot(simulated_all, aes(x= monoisotopic_mass, y=sum_intensity, color = RNA_name, group=interaction(RNA_name, ladder_type))) + 
-  geom_point(size = 1, alpha = 0.5) +
-  geom_line(alpha=0.3)
+  geom_point(size = 1, alpha = 0.5) + 
+  theme_bw() +
+  labs(x = "Monoisotopic Mass (Da)", y = "Sum Intensity") +
+  scale_x_continuous(breaks = c(0, 5000, 10000, 15000, 20000, 25000))
+write_xlsx(simulated_all, "simulated_71_to_80.xlsx")
 ```
 
