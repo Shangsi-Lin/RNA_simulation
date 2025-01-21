@@ -30,3 +30,22 @@ ggplot(simulated_all, aes(x= monoisotopic_mass, y=sum_intensity, color = RNA_nam
   scale_x_continuous(breaks = c(0, 5000, 10000, 15000, 20000, 25000))
 #write_xlsx(simulated_all, "simulated_71_to_80.xlsx")
 ```
+
+```{r}
+scoring = read_xlsx("Data/accuracy score system.xlsx", skip = 3, n_max = 100)
+scoring <- scoring[, -17] %>% 
+  janitor::clean_names()
+ggplot(scoring, aes(x= length, y=false_positive)) + 
+  geom_point(size = 2, alpha = 1, color = "steelblue") + 
+  theme_bw() +
+  labs(x = "Sequence Length", y = "False Positive") +
+  theme(axis.title = element_text(size = 14))
+scoring = scoring %>% 
+  mutate(score = 1-false_positive)
+ggplot(scoring, aes(x= length, y=score)) + 
+  geom_point(size = 2, alpha = 1, color = "red") + 
+  theme_bw() +
+  labs(x = "Sequence Length", y = "Score") +
+  theme(axis.title = element_text(size = 14))
+```
+
