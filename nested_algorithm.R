@@ -13,7 +13,7 @@ library(viridisLite) #provide the turbo 256 color scale
 mass_bound = 360
 
 ppm = function(observed, theo){
-  if(abs((observed - theo) / theo * 10^6) > 0.001) {
+  if(abs((observed - theo) / theo * 10^6) > 10) {
     return(FALSE)
   } else {
     return(TRUE)

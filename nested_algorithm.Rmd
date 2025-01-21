@@ -8,10 +8,17 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 source("nested_algorithm.R")
-df = simulated_all %>% 
+#df = simulated_all %>% 
+#  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
+#  arrange(desc(monoisotopic_mass))
+
+df = read_xlsx("Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx") %>% 
+  janitor::clean_names() %>% 
+  drop_na() %>% 
   select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
-  arrange(desc(monoisotopic_mass))
-dictionary = dictionary %>% 
+  arrange(desc(monoisotopic_mass)) %>%
+  mutate(sum_intensity = as.numeric(sum_intensity), relative_abundance = as.numeric(relative_abundance))
+dictionary = read_xlsx("Data/dictionary.xlsx", n_max = 4) %>% 
   rename(name = base_name, mass = monoisotopic_mass)
 ```
 
@@ -94,5 +101,7 @@ ggplot(temp , aes(x = monoisotopic_mass, y = apex_rt, color = ladder_number)) +
     color = "black",        
     max.overlaps = 70       
   )
+
+write_xlsx(output_df, "20mer_hydrolysis_nested_algorithm_output.xlsx")
 ```
 
