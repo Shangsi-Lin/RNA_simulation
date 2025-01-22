@@ -12,14 +12,15 @@ source("nested_algorithm.R")
 #  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
 #  arrange(desc(monoisotopic_mass))
 
-df = read_xlsx("Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx") %>% 
+df = read_xlsx("Data/sgRNA/100nt_data/100nt_8_M_NonM_30_70_AD.xlsx") %>% 
   janitor::clean_names() %>% 
   drop_na() %>% 
   select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
   arrange(desc(monoisotopic_mass)) %>%
   mutate(sum_intensity = as.numeric(sum_intensity), relative_abundance = as.numeric(relative_abundance))
-dictionary = read_xlsx("Data/dictionary.xlsx", n_max = 4) %>% 
+dictionary = read_xlsx("Data/dictionary.xlsx", n_max = 8) %>% 
   rename(name = base_name, mass = monoisotopic_mass)
+dictionary = dictionary[-5,]
 ```
 
 ```{r}
@@ -102,6 +103,28 @@ ggplot(temp , aes(x = monoisotopic_mass, y = apex_rt, color = ladder_number)) +
     max.overlaps = 70       
   )
 
-write_xlsx(output_df, "20mer_hydrolysis_nested_algorithm_output.xlsx")
+temp = temp %>% 
+  mutate(current_sequence = temp$base_name[1]) 
+for(i in 2:(nrow(temp))){
+  if(temp[i, 5] == temp[i-1, 5]){
+    temp[i, 7] = paste0(temp[i-1, 7], temp[i,1])
+  } else {
+    temp[i, 7] = temp[i, 1]
+  }
+}
+
+for(i in 2:nrow(temp)){
+  if(temp[i, 5] == temp[i-1, 5]){
+    temp[i-1, 7] = ""
+  }
+}
+
+temp = temp %>% filter(current_sequence != "") %>% 
+  rename(sequence = current_sequence, starting_mass = monoisotopic_mass) %>% 
+  mutate(sequence = gsub("High", "", sequence)) %>% 
+  select(sequence, n_iteration, ladder_number, starting_mass)
+
+write_xlsx(output_df, "N70M30_hydrolysis_nested_algorithm_output.xlsx")
+write_xlsx(temp, "N70M30_hydrolysis_sequence_result.xlsx")
 ```
 

@@ -1,0 +1,59 @@
+---
+title: "figure4"
+author: "Shangsi Lin"
+date: "2025-01-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+### Figure 4d
+```{r}
+data <- data.frame(
+  RNA = c("RNA-A", "RNA-B", "RNA-C", "Internal"),
+  Relative_Intensity = c(9, 3.095, 0.850, 0.101)
+)
+
+# Generate the bar plot
+ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
+  labs(
+    title = "",
+    x = NULL,
+    y = "Relative Intensity"
+  ) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red", "Internal" = "yellow")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  )
+
+data$RNA <- factor(data$RNA, levels = data$RNA[order(-data$Relative_Intensity)])
+
+ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
+  labs(
+    title = "",
+    x = NULL,
+    y = "Relative Intensity"
+  ) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red", "Internal" = "yellow")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  )
+
+```
+
