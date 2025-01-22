@@ -1,0 +1,65 @@
+---
+title: "sgRNA_figure"
+author: "Shangsi Lin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(readxl)
+library(writexl)
+library(formattable)
+library(plotly)
+library(ggrepel) #to prevent labels from covering each other
+library(viridisLite) #provide the turbo 256 color scale
+```
+
+```{r}
+df = read_xlsx("Data/sgRNA/Figure1/figure1.xlsx") %>% 
+  mutate(layer_number = as.factor(layer_number))
+intact_df = df %>% 
+  filter(type == "Intact")
+
+print(intact_df)
+
+ggplot(intact_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_number)) +
+  geom_point(size = 15) + 
+  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1")) + # Map colors to layer_number
+  labs(x = "Mass", y = "Intensity") + 
+  theme_classic() + # Remove background
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 20, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 20),
+    axis.text = element_blank(), 
+    axis.ticks = element_blank() 
+  ) + 
+  ylim(0, 36000)
+
+ad_df = df %>% 
+  filter(type == "AD")
+         
+set.seed(123) 
+
+ad_df$sum_intensity = ad_df$sum_intensity + runif(nrow(intact_df), -5000, 5000)
+
+ggplot(ad_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_number)) +
+  geom_point(size = 15) + 
+  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1")) + # Map colors to layer_number
+  labs(x = "Mass", y = "Intensity") + 
+  theme_classic() + # Remove background
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 20, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 20),
+    axis.text = element_blank(), 
+    axis.ticks = element_blank() 
+  ) + 
+  ylim(0, 36000) 
+```
+
