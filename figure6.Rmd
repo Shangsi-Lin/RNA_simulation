@@ -1,0 +1,47 @@
+---
+title: "figure6"
+author: "Shangsi Lin"
+date: "2025-01-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("figure6.R")
+```
+
+```{r}
+theo_N5 = build_theo("GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", dictionary, TRUE)
+theo_N5 = theo_N5[-101,]
+theo_N3 = build_theo("GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", dictionary, FALSE)
+theo_M5 = build_theo("AGUcGGaUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUuUU", dictionary, TRUE)
+theo_M5 = theo_M5[-101,]
+theo_M3 = build_theo("UUuUCGUGGCUGAGCCACGGUGAAAAAGUUCAACUAUUGCCUGAUCGGAAUAAAAUUGAACGAUAAAGAUCGAGAUUUUGCUGGUGAGCCGGUaGGcUGA", dictionary, FALSE)
+```
+
+```{r}
+df = read_xlsx("Data/sgRNA/100nt_data/100nt_11_M_NonM_90_10_AD.xlsx") %>% 
+  janitor::clean_names() %>% 
+  drop_na() %>% 
+  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
+  arrange(desc(monoisotopic_mass)) %>%
+  mutate(sum_intensity = as.numeric(sum_intensity), relative_abundance = as.numeric(relative_abundance))
+
+prophet_M5 = prophet(df, theo_M5)
+prophet_M3 = prophet(df, theo_M3)
+prophet_N5 = prophet(df, theo_N5)
+prophet_N3 = prophet(df, theo_N3)
+
+prophet_M5 = prophet_M5 %>% 
+  mutate(type = "M5")
+prophet_M3 = prophet_M3 %>% 
+  mutate(type = "M3")
+prophet_N5 = prophet_N5 %>% 
+  mutate(type = "N5")
+prophet_N3 = prophet_N3 %>% 
+  mutate(type = "N3")
+
+matched_MN_9010 = rbind(prophet_M3, prophet_M5, prophet_N3, prophet_N5)
+write_xlsx(matched_MN_9010, "matched_MN_9010.xlsx")
+```
+
