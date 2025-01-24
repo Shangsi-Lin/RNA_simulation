@@ -45,3 +45,54 @@ matched_MN_9010 = rbind(prophet_M3, prophet_M5, prophet_N3, prophet_N5)
 write_xlsx(matched_MN_9010, "matched_MN_9010.xlsx")
 ```
 
+```{r}
+df = read_xlsx("matched_MN_1090.xlsx")
+df = df %>% mutate(log_intensity = log(sum_intensity))
+
+
+plot <- plot_ly(
+  data = df,
+  type = "scatter3d",
+  mode = "markers",
+  x = ~monoisotopic_mass,
+  y = ~apex_rt,
+  z = ~log_intensity,
+  color = ~RNA, # Color by RNA type
+  marker = list(size = 6)
+) %>%
+  layout(
+    title = "9010", # Add the title here
+    scene = list(
+      xaxis = list(title = "Monoisotopic Mass"),
+      yaxis = list(title = "Apex RT"),
+      zaxis = list(title = "Log Intensity")
+    )
+  )
+
+plot
+
+
+```
+
+```{r}
+df_summary <- df %>%
+  group_by(RNA) %>%
+  summarise(mean_intensity = mean(sum_intensity))
+
+# Create the bar plot
+ggplot(df_summary, aes(x = RNA, y = mean_intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  theme_minimal() + 
+  theme(
+    text = element_text(size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Comparison of Average Sum Intensity Between RNA Types",
+    x = "RNA Type",
+    y = "Average Sum Intensity"
+  ) +
+  scale_fill_brewer(palette = "Set2") # Use a nice color palette
+```
+
