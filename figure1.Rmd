@@ -28,9 +28,9 @@ intact_df = df %>%
 print(intact_df)
 
 ggplot(intact_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_number)) +
-  geom_point(size = 15) + 
-  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1")) + # Map colors to layer_number
-  labs(x = "Mass", y = "Intensity") + 
+  geom_point(size = 5) + 
+  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1", "4" = "mediumpurple1", "5" = "steelblue1", "6" = "lightpink")) + # Map colors to layer_number
+  labs(x = "Monoisotopic Mass(Da)", y = "Intensity") + 
   theme_classic() + # Remove background
   theme(
     axis.line = element_line(color = "black"), 
@@ -39,27 +39,68 @@ ggplot(intact_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_nu
     axis.text = element_blank(), 
     axis.ticks = element_blank() 
   ) + 
-  ylim(0, 36000)
+  ylim(0, 40000) +
+  xlim(5000, 65000)
 
+```
+
+```{r}
 ad_df = df %>% 
-  filter(type == "AD")
+  filter(type == "AD" & layer_number %in% c("2"))
          
 set.seed(123) 
 
-ad_df$sum_intensity = ad_df$sum_intensity + runif(nrow(intact_df), -5000, 5000)
+ad_df$sum_intensity = ad_df$sum_intensity + runif(nrow(intact_df), -4000, 4000)
 
-ggplot(ad_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_number)) +
-  geom_point(size = 15) + 
-  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1")) + # Map colors to layer_number
-  labs(x = "Mass", y = "Intensity") + 
-  theme_classic() + # Remove background
+
+ggplot(ad_df, aes(x = factor(position), y = sum_intensity, fill = layer_number)) +
+  geom_bar(stat = "identity", width = 0.1, position = position_dodge(width = 0.6)) + 
+  scale_fill_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1", "4" = "mediumpurple1", "5" = "steelblue1", "6" = "lightpink")) + 
+  labs(x = "Fragment Length", y = "Intensity", title = "") + 
+  theme_classic() + 
   theme(
     axis.line = element_line(color = "black"), 
-    axis.title = element_text(size = 20, face = "bold"),
-    axis.title.y = element_text(angle = 90, size = 20),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 18),
     axis.text = element_blank(), 
-    axis.ticks = element_blank() 
-  ) + 
-  ylim(0, 36000) 
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold")
+  )+ 
+  ylim(0, 60000) 
+
+```
+
+```{r}
+
+df = read_xlsx("Data/sgRNA/Figure1/last_figure1.xlsx") %>% 
+  mutate(position = as.factor(position))
+df$sum_intensity = df$sum_intensity + runif(nrow(df), -8000, 8000)
+
+ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.6, position = position_dodge(width = 0.15)) 
+  labs(x = "Fragment Length", y = "Intensity", title = "") + 
+  theme_classic() + 
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 18),
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold")
+  )+ 
+  ylim(0, 60000) 
+  
+ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.6, fill = "red") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 14)
+  ) +
+  ylim(0, 41000)
+
 ```
 
