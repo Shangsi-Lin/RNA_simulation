@@ -12,6 +12,8 @@ source("RNA_simulation.R")
 
 
 ```{r}
+dictionary = dictionary[-5, ]
+
 set.seed(2)
 simulated_all = generate_dataset(71, "simulated_71", 30000)
 for(i in 1:9){

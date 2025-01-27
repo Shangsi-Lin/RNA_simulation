@@ -195,3 +195,135 @@ plot
 
 ```
 
+```{r}
+df = read_xlsx("Data/sgRNA/Figure4/separation_simulation.xlsx")
+tibble(df)
+df = df %>% 
+  mutate(log_intensity = log(sum_intensity))
+```
+
+```{r}
+# Assuming your data frame is called df
+df <- df %>%
+  group_by(RNA_type) %>%
+  mutate(
+    max_intensity_index = which.max(log_intensity),  # Index of max intensity
+    x_max = monoisotopic_mass[max_intensity_index],  # X of max intensity
+    y_max = apex_rt[max_intensity_index],           # Y of max intensity
+    z_max = log_intensity[max_intensity_index]      # Z of max intensity
+  ) %>%
+  ungroup()
+
+# Define colors for each RNA type
+rna_colors <- c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red")
+
+# Create the 3D scatter plot
+plot <- plot_ly()
+
+# Add points and lines for each RNA_type
+
+  subset_df <- df %>% filter(RNA_type == "RNA_A")
+  
+  # Add points for this RNA type
+  plot <- plot %>%
+    add_trace(
+      type = 'scatter3d',
+      mode = 'markers',
+      x = subset_df$monoisotopic_mass,
+      y = subset_df$apex_rt,
+      z = subset_df$log_intensity,
+      marker = list(size = 5, color = "blue"),
+      name = "RNA-A"
+    )
+  
+  # Add lines connecting points to the highest intensity point
+  for (i in 1:nrow(subset_df)) {
+    plot <- plot %>%
+      add_trace(
+        type = 'scatter3d',
+        mode = 'lines',
+        x = c(subset_df$monoisotopic_mass[i], subset_df$x_max[i]),
+        y = c(subset_df$apex_rt[i], subset_df$y_max[i]),
+        z = c(subset_df$log_intensity[i], subset_df$z_max[i]),
+        line = list(width = 0.5, color = "blue"),  # Use RNA-specific color for lines
+        showlegend = FALSE
+      )
+  }
+
+subset_df <- df %>% filter(RNA_type == "RNA_B")
+  
+  # Add points for this RNA type
+  plot <- plot %>%
+    add_trace(
+      type = 'scatter3d',
+      mode = 'markers',
+      x = subset_df$monoisotopic_mass,
+      y = subset_df$apex_rt,
+      z = subset_df$log_intensity,
+      marker = list(size = 5, color = "green"),
+      name = "RNA-B"
+    )
+  
+  # Add lines connecting points to the highest intensity point
+  for (i in 1:nrow(subset_df)) {
+    plot <- plot %>%
+      add_trace(
+        type = 'scatter3d',
+        mode = 'lines',
+        x = c(subset_df$monoisotopic_mass[i], subset_df$x_max[i]),
+        y = c(subset_df$apex_rt[i], subset_df$y_max[i]),
+        z = c(subset_df$log_intensity[i], subset_df$z_max[i]),
+        line = list(width = 0.5, color = "green"),  # Use RNA-specific color for lines
+        showlegend = FALSE
+      )
+  }
+  
+subset_df <- df %>% filter(RNA_type == "RNA_C")
+  
+  # Add points for this RNA type
+  plot <- plot %>%
+    add_trace(
+      type = 'scatter3d',
+      mode = 'markers',
+      x = subset_df$monoisotopic_mass,
+      y = subset_df$apex_rt,
+      z = subset_df$log_intensity,
+      marker = list(size = 5, color = "red"),
+      name = "RNA-C"
+    )
+  
+  # Add lines connecting points to the highest intensity point
+  for (i in 1:nrow(subset_df)) {
+    plot <- plot %>%
+      add_trace(
+        type = 'scatter3d',
+        mode = 'lines',
+        x = c(subset_df$monoisotopic_mass[i], subset_df$x_max[i]),
+        y = c(subset_df$apex_rt[i], subset_df$y_max[i]),
+        z = c(subset_df$log_intensity[i], subset_df$z_max[i]),
+        line = list(width = 0.5, color = "red"),  # Use RNA-specific color for lines
+        showlegend = FALSE
+      )
+  }
+  
+  
+# Customize the layout
+plot <- plot %>%
+  layout(
+    title = "",
+    scene = list(
+      xaxis = list(title = "Monoisotopic Mass (Da)",
+        titlefont = list(size = 14, family = "Arial", weight = "bold")),
+      yaxis = list(title = "Rentention Time (min)",
+        titlefont = list(size = 14, family = "Arial", weight = "bold")),
+      zaxis = list(title = "Log(Intensity)",
+        titlefont = list(size = 14, family = "Arial", weight = "bold"))
+    )
+    #paper_bgcolor = "lightblue"
+    #plot_bgcolor = "lightblue" 
+  )
+
+# Display the plot
+plot
+```
+

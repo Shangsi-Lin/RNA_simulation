@@ -9,7 +9,7 @@ library(caret)
 
   #Load the dictionary, containing the most common 9 nucleotides(AUCG, their methylated form, and D)
 dictionary = read_xlsx("Data/dictionary.xlsx") %>% 
-  janitor::clean_names()
+  janitor::clean_names() 
 
   #This function generates a completely random RNA sequence with user defined length variable
 simulate_RNA = function(length){
