@@ -12,7 +12,7 @@ source("nested_algorithm.R")
 #  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
 #  arrange(desc(monoisotopic_mass))
 
-df = read_xlsx("Data/sgRNA/100nt_data/100nt_8_M_NonM_30_70_AD.xlsx") %>% 
+df = read_xlsx("Data/sgRNA/Figure6/100nt RNA.xlsx") %>% 
   janitor::clean_names() %>% 
   drop_na() %>% 
   select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
