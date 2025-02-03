@@ -27,8 +27,10 @@ intact_df = df %>%
 
 print(intact_df)
 
+# Plot with perpendicular dotted lines reaching the x-axis
 ggplot(intact_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_number)) +
   geom_point(size = 5) + 
+  geom_segment(aes(xend = monoisotopic_mass, yend = 0), linetype = "dotted") + # Draw dotted lines to x-axis
   scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1", "4" = "mediumpurple1", "5" = "steelblue1", "6" = "lightpink")) + # Map colors to layer_number
   labs(x = "Monoisotopic Mass(Da)", y = "Intensity") + 
   theme_classic() + # Remove background
@@ -39,22 +41,23 @@ ggplot(intact_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_nu
     axis.text = element_blank(), 
     axis.ticks = element_blank() 
   ) + 
-  ylim(0, 40000) +
-  xlim(5000, 65000)
+  coord_cartesian(ylim = c(2000, 40000), xlim = c(5000, 65000)) # Use coord_cartesian to avoid clipping
 
 ```
 
 ```{r}
 ad_df = df %>% 
-  filter(type == "AD" & layer_number %in% c("2"))
+  filter(type == "AD" & layer_number %in% c("1"))
          
 set.seed(123) 
 
 ad_df$sum_intensity = ad_df$sum_intensity + runif(nrow(intact_df), -4000, 4000)
 
+ad_df$sum_intensity = c(30000, 45000, 53000, 40000, 36000, 32000)
+
 
 ggplot(ad_df, aes(x = factor(position), y = sum_intensity, fill = layer_number)) +
-  geom_bar(stat = "identity", width = 0.1, position = position_dodge(width = 0.6)) + 
+  geom_bar(stat = "identity", width = 0.2, position = position_dodge(width = 0.6)) + 
   scale_fill_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1", "4" = "mediumpurple1", "5" = "steelblue1", "6" = "lightpink")) + 
   labs(x = "Fragment Length", y = "Intensity", title = "") + 
   theme_classic() + 
