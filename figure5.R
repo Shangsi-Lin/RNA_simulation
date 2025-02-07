@@ -1,15 +1,11 @@
+library(ggplot2)
 library(tidyverse)
+library(tidyr)
 library(dplyr)
 library(readxl)
 library(writexl)
-
-ppm = function(observed, theo){
-  if(abs((observed - theo) / theo * 10^6) > 10) {
-    return(FALSE)
-  } else {
-    return(TRUE)
-  }
-}
-
-dictionary = read_xlsx("Data/dictionary.xlsx")
-dictionary = dictionary[-c(5, 9),]
+library(formattable)
+library(plotly)
+library(ggrepel) #avoid label stacking when using ggplot
+library(viridisLite) #turbo 256 color scale
+library(patchwork) #for table presentation
