@@ -10,48 +10,80 @@ knitr::opts_chunk$set(echo = TRUE)
 source("figure5.R")
 ```
 
-```{r Figure5d}
+```{r Figure5d, fig.width=10, fig.height=4}
 df=read_xlsx("Data/sgRNA/Figure5/N100M_sequence_result/N100M_plot.xlsx") %>% 
   janitor::clean_names()
-print(tibble(df), n = 100)
 
-ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, color = log10(sum_intensity), shape = ladder_type, group = ladder_type)) +
-  geom_point(size = 3) +  # Add points
+df <- df %>%
+  mutate(point_size = ifelse(ladder_type == "Intact", 3.5, 2.5))  
+
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, 
+               color = log10(sum_intensity), 
+               shape = ladder_type, 
+               group = ladder_type)) +
+  geom_point(aes(size = point_size)) +  # Map size to point_size inside aes()
   geom_line(color = "gray34", alpha = 0.5) +  # Add lines connecting points within the same ladder_type
-  scale_x_continuous(name = "Monoisotopic Mass (KDa)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2)) +
-  scale_y_continuous(name = "Retention Time (min)", breaks = seq(0, max(df$apex_rt, na.rm = TRUE), by = 2)) +
-  labs(color = "Log10(Intensity)", shape = "Ladder Type") +
-  theme_minimal() +
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2)) +
+  scale_y_continuous(name = "Retention Time (min)", limits = c(0,19), breaks = seq(0, 19, by = 2)) +
+  labs(color = "Log10(Intensity)", shape = "Ladder Type", size = "Ladder Type") +  # Add size to legend
+  theme_classic() +
   theme(
-    axis.title.x = element_text(size = 12, face = "bold"),
-    axis.title.y = element_text(size = 12, face = "bold"),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 10),
-    legend.title = element_text(size = 12, face = "bold"),
+    legend.title = element_text(size = 10),
     legend.text = element_text(size = 10)
   ) +
-  scale_color_gradientn(colors = turbo(256))  # Use turbo color scale for the color aesthetic
+  scale_color_gradientn(colors = turbo(256)) +  # Use turbo color scale for the color aesthetic
+  scale_size_identity()  # Use the actual values in point_size for sizing
 ```
 
-```{r Figure5c}
+```{r Figure5c, fig.width=10, fig.height=4}
 df=read_xlsx("Data/sgRNA/Figure5/N100N_sequence_result/N100N_plot.xlsx") %>% 
   janitor::clean_names()
-print(tibble(df), n = 100)
 
-ggplot(df, aes(x = monoisotopic_mass, y = apex_rt, color = log10(sum_intensity), shape = ladder_type, group = ladder_type)) +
-  geom_point(size = 3) +  # Add points
+df <- df %>%
+  mutate(point_size = ifelse(ladder_type == "Intact", 3.5, 2.5))
+
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, 
+               color = log10(sum_intensity), 
+               shape = ladder_type, 
+               group = ladder_type)) +
+  geom_point(aes(size = point_size)) +  # Map size to point_size inside aes()
   geom_line(color = "gray34", alpha = 0.5) +  # Add lines connecting points within the same ladder_type
-  scale_x_continuous(name = "Monoisotopic Mass (Da)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2000)) +
-  scale_y_continuous(name = "Retention Time (min)", breaks = seq(0, max(df$apex_rt, na.rm = TRUE), by = 2)) +
-  labs(color = "Log10(Intensity)", shape = "Ladder Type") +
-  theme_minimal() +
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2)) +
+  scale_y_continuous(name = "Retention Time (min)", limits = c(0, 19), breaks = seq(0, 19, by = 2)) +
+  labs(color = "Log10(Intensity)", shape = "Ladder Type", size = "Ladder Type") +  # Add size to legend
+  theme_classic() +
   theme(
-    axis.title.x = element_text(size = 12, face = "bold"),
-    axis.title.y = element_text(size = 12, face = "bold"),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
     axis.text.x = element_text(size = 10),
     axis.text.y = element_text(size = 10),
-    legend.title = element_text(size = 12, face = "bold"),
+    legend.title = element_text(size = 10),
     legend.text = element_text(size = 10)
   ) +
-  scale_color_gradientn(colors = turbo(256))  # Use turbo color scale for the color aesthetic
+  scale_color_gradientn(colors = turbo(256)) +  # Use turbo color scale for the color aesthetic
+  scale_size_identity()  # Use the actual values in point_size for sizing
 ```
+
+```{r Figure5e}
+df = read_xlsx("Data/sgRNA/Figure5/N100_mixture_result/100NM_19/100NM19_plot.xlsx") %>% 
+  mutate(log_intensity = log10(sum_intensity))
+
+plot_ly(df, 
+        x = ~monoisotopic_mass, 
+        y = ~apex_rt, 
+        z = ~log_intensity, 
+        color = ~sgRNA, 
+        type = "scatter3d", 
+        mode = "markers", 
+        marker = list(size = 5)) %>%
+  layout(scene = list(
+    xaxis = list(title = "Monoisotopic Mass (Da)"),
+    yaxis = list(title = "Time (min)"),
+    zaxis = list(title = "Log Intensity")
+  ))
+```
+

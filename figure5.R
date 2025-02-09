@@ -9,3 +9,4 @@ library(plotly)
 library(ggrepel) #avoid label stacking when using ggplot
 library(viridisLite) #turbo 256 color scale
 library(patchwork) #for table presentation
+library(viridis)
