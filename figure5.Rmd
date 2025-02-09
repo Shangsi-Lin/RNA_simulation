@@ -15,10 +15,10 @@ df=read_xlsx("Data/sgRNA/Figure5/N100M_sequence_result/N100M_plot.xlsx") %>%
   janitor::clean_names()
 print(tibble(df), n = 100)
 
-ggplot(df, aes(x = monoisotopic_mass, y = apex_rt, color = log10(sum_intensity), shape = ladder_type, group = ladder_type)) +
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, color = log10(sum_intensity), shape = ladder_type, group = ladder_type)) +
   geom_point(size = 3) +  # Add points
   geom_line(color = "gray34", alpha = 0.5) +  # Add lines connecting points within the same ladder_type
-  scale_x_continuous(name = "Monoisotopic Mass (Da)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2000)) +
+  scale_x_continuous(name = "Monoisotopic Mass (KDa)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2)) +
   scale_y_continuous(name = "Retention Time (min)", breaks = seq(0, max(df$apex_rt, na.rm = TRUE), by = 2)) +
   labs(color = "Log10(Intensity)", shape = "Ladder Type") +
   theme_minimal() +
