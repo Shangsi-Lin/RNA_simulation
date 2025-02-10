@@ -69,21 +69,23 @@ ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt,
 ```
 
 ```{r Figure5e}
-df = read_xlsx("Data/sgRNA/Figure5/N100_mixture_result/100NM_19/100NM19_plot.xlsx") %>% 
-  mutate(log_intensity = log10(sum_intensity))
+plot_mixture("Data/sgRNA/Figure5/N100_mixture_result/100NM_19/100NM19_plot.xlsx")
+plot_mixture("Data/sgRNA/Figure5/N100_mixture_result/100NM_55/100NM55_plot.xlsx")
+plot_mixture("Data/sgRNA/Figure5/N100_mixture_result/100NM_91/100NM91_plot.xlsx")
+```
+```{r Figure5f, fig.width=10, fig.height=4}
+df = read_xlsx("Data/sgRNA/Figure5/N100_mixture_result/mixture_coverage.xlsx") 
+df = head(df, 10)
 
-plot_ly(df, 
-        x = ~monoisotopic_mass, 
-        y = ~apex_rt, 
-        z = ~log_intensity, 
-        color = ~sgRNA, 
-        type = "scatter3d", 
-        mode = "markers", 
-        marker = list(size = 5)) %>%
-  layout(scene = list(
-    xaxis = list(title = "Monoisotopic Mass (Da)"),
-    yaxis = list(title = "Time (min)"),
-    zaxis = list(title = "Log Intensity")
-  ))
+ggplot(df, aes(x = sgRNA1_percentage, y = coverage, fill = sgRNA_type)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 2.5), width = 2) +
+  labs(
+    x = "Percentage sgRNA1 in mixture(%)",
+    y = "Percent Sequence Coverage(%)",
+    fill = "sgRNA Type"
+  ) +
+  scale_x_continuous(breaks = c(10, 30, 50, 70, 90)) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1")
 ```
 
