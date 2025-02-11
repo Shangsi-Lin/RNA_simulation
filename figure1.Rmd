@@ -16,6 +16,7 @@ library(writexl)
 library(formattable)
 library(plotly)
 library(ggrepel) #to prevent labels from covering each other
+library(patchwork)
 library(viridisLite) #provide the turbo 256 color scale
 ```
 
@@ -73,11 +74,13 @@ ggplot(ad_df, aes(x = factor(position), y = sum_intensity, fill = layer_number))
 
 ```
 
-```{r}
+```{r, fig.width=15, fig.height=12}
 
 df = read_xlsx("Data/sgRNA/Figure1/last_figure1.xlsx") %>% 
   mutate(position = as.factor(position))
 df$sum_intensity = df$sum_intensity + runif(nrow(df), -8000, 8000)
+
+
 
 ggplot(df, aes(x = factor(position), y = sum_intensity)) +
   geom_bar(stat = "identity", width = 0.6, position = position_dodge(width = 0.15)) 
@@ -105,5 +108,82 @@ ggplot(df, aes(x = factor(position), y = sum_intensity)) +
   ) +
   ylim(0, 41000)
 
+df=head(df, 5)
+
+df[1,6] = "U"
+df[2,6] = "A"
+df[3,6] = "G"
+df[4,6] = "U"
+df[5,6] = "C"
+df[1,1] = 20000
+df[4,1] = 25000
+df[5,1] = 15000
+
+fig1 = ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.2, fill = "red") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 10, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 10)
+  ) +
+  ylim(0, 41000)
+
+
+df[1,6] = "A"
+df[2,6] = "U"
+df[3,6] = "A"
+df[4,6] = "G"
+df[5,6] = "G"
+df[2,1] = 30000
+df[3,1] = 38000
+df[4,1] = 20000
+
+fig2 = ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.2, fill = "steelblue") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 10, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 10)
+  ) +
+  ylim(0, 41000)
+
+df[1,6] = "U"
+df[2,6] = "A"
+df[3,6] = "G"
+df[4,6] = "U"
+df[5,6] = "C"
+df[6,6] = "A"
+df[7,6] = "G"
+df[2,1] = 24000
+df[3,1] = 32000
+df[4,1] = 34000
+df[5,1] = 38000
+df[6,1] = 30000
+df[7,1] = 22000
+df[6,5] = as.factor(6)
+df[7,5] = as.factor(7)
+
+fig3 = ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.2, fill = "goldenrod1") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 10, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 10)
+  ) +
+  ylim(0, 41000)
+
+combined_plot <- fig1 / fig2 / fig3  # '/' stacks plots vertically
+
+# Print the combined figure
+print(combined_plot)
 ```
 

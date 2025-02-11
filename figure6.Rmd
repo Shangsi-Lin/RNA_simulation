@@ -11,88 +11,109 @@ source("figure6.R")
 ```
 
 ```{r}
-theo_N5 = build_theo("GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", dictionary, TRUE)
-theo_N5 = theo_N5[-101,]
-theo_N3 = build_theo("GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", dictionary, FALSE)
-theo_M5 = build_theo("AGUcGGaUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUuUU", dictionary, TRUE)
-theo_M5 = theo_M5[-101,]
-theo_M3 = build_theo("UUuUCGUGGCUGAGCCACGGUGAAAAAGUUCAACUAUUGCCUGAUCGGAAUAAAAUUGAACGAUAAAGAUCGAGAUUUUGCUGGUGAGCCGGUaGGcUGA", dictionary, FALSE)
+options(scipen = 999)
+
+ppm = function(observed, theo){
+  if(abs((observed - theo) / theo * 10^6) > 10) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+
+reference = read_xlsx("Data/dictionary.xlsx")
+
+df = load_df("Data/sgRNA/Figure6/N100N_Intact_T01_250203_LSS.xlsx") %>% 
+  mutate(difference = monoisotopic_mass - 32362.298) 
+
+df_M = load_df("Data/sgRNA/Figure6/N100M_Intact_T01_250203_LSS.xlsx") %>% 
+  mutate(difference = monoisotopic_mass - 32077.299)
+
+theo_N5 = build_theo("GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU", reference, TRUE)
+temp = paste(rev(strsplit("GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU", NULL)[[1]]), collapse = "")
+theo_N3 = build_theo(temp, reference, FALSE)
+
+prophet_N5 = prophet(df, theo_N5) %>% 
+  filter(monoisotopic_mass <= 30000)
+prophet_N3 = prophet(df, theo_N3) %>% 
+  filter(monoisotopic_mass <= 30000)
+
+filtered_df <- df %>%
+  filter(!monoisotopic_mass %in% prophet_N5$monoisotopic_mass)
+
+homology_df <- filtered_df %>%
+  filter(!monoisotopic_mass %in% prophet_N3$monoisotopic_mass) %>% 
+  mutate(identity = "impurities")
+
+homology_df[6, 7] = "sgRNA1 isoform"
+homology_df[7, 7] = "sgRNA1 isoform"
+homology_df[8, 7] = "sgRNA1"
 ```
 
-```{r}
-df = read_xlsx("Data/sgRNA/100nt_data/100nt_11_M_NonM_90_10_AD.xlsx") %>% 
-  janitor::clean_names() %>% 
-  drop_na() %>% 
-  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance) %>% 
-  arrange(desc(monoisotopic_mass)) %>%
-  mutate(sum_intensity = as.numeric(sum_intensity), relative_abundance = as.numeric(relative_abundance))
+```{r figure5b}
+ggplot(homology_df, aes(x = monoisotopic_mass/1000, y = log10(sum_intensity), color = identity)) +
+  geom_point(size = 4, alpha = 0.9) +  # Adjust size and transparency
+  labs(x = "Monoisotopic Mass(kDa)", y = "Log10(Intensity)", color = "Identity") +
+  theme_classic() + 
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, 34, by = 4)) +
+  scale_y_continuous(name = "Log10(Intensity)", limits = c(2, 8), breaks = seq(2, 8, by = 2)) +
+  theme(text = element_text(size = 14))
 
-prophet_M5 = prophet(df, theo_M5)
-prophet_M3 = prophet(df, theo_M3)
-prophet_N5 = prophet(df, theo_N5)
-prophet_N3 = prophet(df, theo_N3)
+ggplot(homology_df, aes(x = monoisotopic_mass/1000, y = relative_abundance, color = identity)) +
+  geom_point(size = 3, alpha = 0.9) +  # Adjust size and transparency
+  labs(x = "Monoisotopic Mass(kDa)", y = "Log10(Intensity)", color = "Identity") +
+  theme_classic() + 
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, 34, by = 4)) +
+  scale_y_continuous(name = "Relative Abundance", limits = c(0, 100)) +
+  theme(text = element_text(size = 14))
 
-prophet_M5 = prophet_M5 %>% 
-  mutate(type = "M5")
-prophet_M3 = prophet_M3 %>% 
-  mutate(type = "M3")
-prophet_N5 = prophet_N5 %>% 
-  mutate(type = "N5")
-prophet_N3 = prophet_N3 %>% 
-  mutate(type = "N3")
+ggplot(homology_df %>% filter(monoisotopic_mass >= 30000), aes(x = monoisotopic_mass/1000, y = log10(sum_intensity), color = identity)) +
+  geom_point(size = 6, alpha = 0.9) +  # Adjust size and transparency
+  labs(x = "Monoisotopic Mass(kDa)", y = "Log10(Intensity)", color = "Identity") +
+  theme_classic() + 
+    scale_x_continuous(name = "Monoisotopic Mass(kDa)", limits = c(32.3,32.5), breaks = seq(32.3, 32.5, by = 0.1)) +
+  theme(text = element_text(size = 14))
 
-matched_MN_9010 = rbind(prophet_M3, prophet_M5, prophet_N3, prophet_N5)
-write_xlsx(matched_MN_9010, "matched_MN_9010.xlsx")
+homology_df = homology_df %>% 
+  filter(monoisotopic_mass > 30000)
+
+write_xlsx(homology_df, "temp.xlsx")
 ```
 
-```{r}
-df = read_xlsx("matched_MN_1090.xlsx")
-df = df %>% mutate(log_intensity = log(sum_intensity))
+```{r Figure5c}
+df = read_xlsx("Data/sgRNA/Figure6/impurity.xlsx") %>% 
+  mutate(log_intensity = log10(sum_intensity)) 
+df = head(df, n = 162)
+df = df %>% 
+  filter(layer_number != 11 & layer_number != 40) %>% 
+  mutate(layer_number = paste0("layer #", layer_number))
+```
 
-
-plot <- plot_ly(
-  data = df,
-  type = "scatter3d",
-  mode = "markers",
-  x = ~monoisotopic_mass,
-  y = ~apex_rt,
-  z = ~log_intensity,
-  color = ~RNA, # Color by RNA type
-  marker = list(size = 6)
-) %>%
-  layout(
-    title = "9010", # Add the title here
-    scene = list(
-      xaxis = list(title = "Monoisotopic Mass"),
-      yaxis = list(title = "Apex RT"),
-      zaxis = list(title = "Log Intensity")
-    )
+```{r, fig.width=16, fig.height=8}
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, color = log_intensity, label = base_name)) + 
+  geom_point(size = 3) +
+  scale_color_gradientn(colors = c("blue", "orange", "red")) +  
+  facet_wrap(~layer_number, scales = "free_y", ncol = 2) +  # Free y-axis, shared x-axis within columns
+  labs(x = "Monoisotopic Mass(kDa)", y = "Retention Time(min)", color = "Log(Intensity)") +
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, 16, by = 2)) +
+  scale_y_continuous(name = "Retention Time (min)", limits = c(0,20), breaks = seq(0, 20, by = 4)) +
+  theme_classic() +
+  geom_text(vjust = -1, size = 3) +
+  theme(
+    strip.text = element_text(size = 12),
+    axis.text.x = element_text()
+  ) +
+  theme(
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 10)
   )
 
-plot
-
-
+temp = read_xlsx("Data/sgRNA/Figure6/N100N_sequence_result/N100N_5min_T01_250204_LSS.xlsx") %>% 
+  drop_na()
 ```
 
-```{r}
-df_summary <- df %>%
-  group_by(RNA) %>%
-  summarise(mean_intensity = mean(sum_intensity))
-
-# Create the bar plot
-ggplot(df_summary, aes(x = RNA, y = mean_intensity, fill = RNA)) +
-  geom_bar(stat = "identity", color = "black", width = 0.7) +
-  theme_minimal() + 
-  theme(
-    text = element_text(size = 14),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "none"
-  ) +
-  labs(
-    title = "Comparison of Average Sum Intensity Between RNA Types",
-    x = "RNA Type",
-    y = "Average Sum Intensity"
-  ) +
-  scale_fill_brewer(palette = "Set2") # Use a nice color palette
-```
 
