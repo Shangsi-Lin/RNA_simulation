@@ -7,7 +7,84 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-source("plotting.R")
+source("introduction.R")
+ppm = function(observed, theo){
+  if(abs((observed - theo) / theo * 10^6) > 10) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+dictionary = read_xlsx("Data/dictionary.xlsx")
 ```
 
+```{r}
+set.seed(123)  # Set a seed for reproducibility
+set_up("RNA_A", "AAACCGUUACCAUUACUGAG", "Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx", "synthetic_RNA", 6000, 0)
+prophet_A5 = prophet(df, theo_5)
+prophet_A3 = prophet(df, theo_3)
+set_up("RNA_B", "UAUUCAAGUUACACUCAAGA", "Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx", "synthetic_RNA", 6000, 0)
+prophet_B5 = prophet(df, theo_5)
+prophet_B3 = prophet(df, theo_3)
+set_up("RNA_C", "GCGUACAUCUUCCCCUUUAU", "Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx", "synthetic_RNA", 6000, 0)
+prophet_C5 = prophet(df, theo_5)
+prophet_C3 = prophet(df, theo_3)
+
+prophet_A5 = prophet_A5 %>% 
+  mutate(ladder_type = "A5")
+
+prophet_A3 = prophet_A3 %>% 
+  mutate(ladder_type = "A3")
+
+prophet_B5 = prophet_B5 %>% 
+  mutate(ladder_type = "B5")
+
+prophet_B3 = prophet_B3 %>% 
+  mutate(ladder_type = "B3")
+
+prophet_C5 = prophet_C5 %>% 
+  mutate(ladder_type = "C5")
+
+prophet_C3 = prophet_C3 %>% 
+  mutate(ladder_type = "C3")
+
+prophet_all = rbind(prophet_A3, prophet_A5, prophet_B3, prophet_B5, prophet_C3, prophet_C5) %>% 
+  select(monoisotopic_mass, apex_rt, sum_intensity, relative_abundance, ladder_type, base_name, n_position)
+
+
+# Filter df1
+filtered_df <- df%>%
+  filter(!monoisotopic_mass %in% prophet_all$monoisotopic_mass) %>% 
+  filter(monoisotopic_mass < 6400) %>% 
+  filter(sum_intensity < 100000)
+
+sampled_df <- filtered_df %>% sample_n(100) %>% 
+  mutate(ladder_type = "noise", base_name = "", n_position = 1)
+
+figure1_df = rbind(prophet_all, sampled_df)
+
+ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
+  geom_point(size = 3, color = "steelblue") + # Points
+  labs(x = "Monoisotopic Mass(Da)", y = "Retention Time(min)", title = "") +
+  theme_classic()
+
+ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
+  geom_point(size = 2, color = "steelblue") + # Points
+  labs(x = "", y = "", title = "") +
+  theme_classic()
+
+ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
+  geom_point(size = 2, color = "steelblue") + # 绘制点
+  labs(x = "", y = "", title = "") + # 去掉 x 轴、y 轴和标题的标签
+  theme_classic() + # 使用经典主题
+  theme(
+    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
+    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
+    axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
+  )
+```
+
+```{r}
+
+```
 
