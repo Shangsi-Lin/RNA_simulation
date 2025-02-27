@@ -5,6 +5,7 @@ library(writexl)
 library(ggrepel)
 library(plotly)
 library(randomForest)
+library(ggplot2)
 library(caret)
 
   #Load the dictionary, containing the most common 9 nucleotides(AUCG, their methylated form, and D)

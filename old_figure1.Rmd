@@ -1,0 +1,191 @@
+---
+title: "sgRNA_figure"
+author: "Shangsi Lin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(readxl)
+library(writexl)
+library(formattable)
+library(plotly)
+library(ggrepel) #to prevent labels from covering each other
+library(patchwork)
+library(viridisLite) #provide the turbo 256 color scale
+```
+
+```{r}
+df = read_xlsx("Data/sgRNA/Figure1/figure1.xlsx") %>% 
+  mutate(layer_number = as.factor(layer_number))
+intact_df = df %>% 
+  filter(type == "Intact")
+
+print(intact_df)
+
+# Plot with perpendicular dotted lines reaching the x-axis
+ggplot(intact_df, aes(x = monoisotopic_mass, y = sum_intensity, color = layer_number)) +
+  geom_point(size = 5) + 
+  geom_segment(aes(xend = monoisotopic_mass, yend = 0), linetype = "dotted") + # Draw dotted lines to x-axis
+  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1", "4" = "mediumpurple1", "5" = "steelblue1", "6" = "lightpink")) + # Map colors to layer_number
+  labs(x = "Monoisotopic Mass(Da)", y = "Intensity") + 
+  theme_classic() + # Remove background
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 20, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 20),
+    axis.text = element_blank(), 
+    axis.ticks = element_blank() 
+  ) + 
+  coord_cartesian(ylim = c(2000, 40000), xlim = c(5000, 65000)) # Use coord_cartesian to avoid clipping
+
+```
+
+```{r}
+ad_df = df %>% 
+  filter(type == "AD" & layer_number %in% c("1"))
+         
+set.seed(123) 
+
+ad_df$sum_intensity = ad_df$sum_intensity + runif(nrow(intact_df), -4000, 4000)
+
+ad_df$sum_intensity = c(30000, 45000, 53000, 40000, 36000, 32000)
+
+
+ggplot(ad_df, aes(x = factor(position), y = sum_intensity, fill = layer_number)) +
+  geom_bar(stat = "identity", width = 0.2, position = position_dodge(width = 0.6)) + 
+  scale_fill_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "tan1", "4" = "mediumpurple1", "5" = "steelblue1", "6" = "lightpink")) + 
+  labs(x = "Fragment Length", y = "Intensity", title = "") + 
+  theme_classic() + 
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 18),
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold")
+  )+ 
+  ylim(0, 60000) 
+
+```
+
+```{r, fig.width=15, fig.height=12}
+
+df = read_xlsx("Data/sgRNA/Figure1/last_figure1.xlsx") %>% 
+  mutate(position = as.factor(position))
+df$sum_intensity = df$sum_intensity + runif(nrow(df), -8000, 8000)
+
+
+
+ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.6, position = position_dodge(width = 0.15)) 
+  labs(x = "Fragment Length", y = "Intensity", title = "") + 
+  theme_classic() + 
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 18),
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 20, face = "bold")
+  )+ 
+  ylim(0, 60000) 
+  
+ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.6, fill = "red") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 14)
+  ) +
+  ylim(0, 41000)
+
+df=head(df, 5)
+
+df[1,6] = "U"
+df[2,6] = "A"
+df[3,6] = "G"
+df[4,6] = "U"
+df[5,6] = "C"
+df[1,1] = 20000
+df[4,1] = 25000
+df[5,1] = 15000
+
+fig1 = ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.2, fill = "red") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 10, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 10)
+  ) +
+  ylim(0, 41000)
+
+
+df[1,6] = "A"
+df[2,6] = "U"
+df[3,6] = "A"
+df[4,6] = "G"
+df[5,6] = "G"
+df[2,1] = 30000
+df[3,1] = 38000
+df[4,1] = 20000
+
+fig2 = ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.2, fill = "steelblue") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 10, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 10)
+  ) +
+  ylim(0, 41000)
+
+df[1,6] = "U"
+df[2,6] = "A"
+df[3,6] = "G"
+df[4,6] = "U"
+df[5,6] = "C"
+df[6,6] = "A"
+df[7,6] = "G"
+df[2,1] = 24000
+df[3,1] = 32000
+df[4,1] = 34000
+df[5,1] = 38000
+df[6,1] = 30000
+df[7,1] = 22000
+df[6,5] = as.factor(6)
+df[7,5] = as.factor(7)
+
+fig3 = ggplot(df, aes(x = factor(position), y = sum_intensity)) +
+  geom_bar(stat = "identity", width = 0.2, fill = "goldenrod1") + 
+  labs(x = "", y = "", title = "") + 
+  geom_text(aes(label = text), vjust = -0.5, size = 8, fontface = "bold") +
+  theme_void() + # Removes background and axis elements
+  theme(
+    axis.line = element_line(color = "black"), 
+    axis.title = element_text(size = 10, face = "bold"),
+    axis.title.y = element_text(angle = 90, size = 10)
+  ) +
+  ylim(0, 41000)
+
+combined_plot <- fig1 / fig2 / fig3  # '/' stacks plots vertically
+
+# Print the combined figure
+print(combined_plot)
+```
+
+
+
