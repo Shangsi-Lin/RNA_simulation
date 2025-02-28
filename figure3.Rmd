@@ -9,4 +9,85 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+source("introduction.R")
+ppm = function(observed, theo){
+  if(abs((observed - theo) / theo * 10^6) > 10) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+dictionary = read_xlsx("Data/dictionary.xlsx")
+```
+
+```{r}
+figure3a_df = read_xlsx("Data/sgRNA/Figure5/N100N_sequence_result/N100N_plot.xlsx") %>% 
+  filter(as.numeric(position) < 80, !is.na(sum_intensity), ladder_type == "3'") %>% 
+  mutate(ratio = 1)
+
+
+for(i in 2:nrow(figure3a_df)){
+  figure3a_df[i,7] = figure3a_df[i,3]/figure3a_df[(i-1),3]
+}
+
+avg_ratio = mean(figure3a_df$ratio)
+var_ratio = var(figure3a_df$ratio)
+
+ggplot(figure3a_df, aes(x = as.factor(position
+                                      ), y = ratio, fill = ratio > 1)) +
+  geom_col() + # 绘制柱子
+  geom_hline(yintercept = avg_ratio, color = "red", linetype = "dashed", size = 1) + # 添加红色水平线
+  geom_text(aes(label = round(ratio, 2)), vjust = 0.55, size = 2, color = "black", angle = 90, nudge_y= 0.07, fontface = "bold") + # 在柱子顶部标记 ratio 值并旋转90度，调整位置
+  scale_fill_manual(values = c("FALSE" = "blue", "TRUE" = "orange")) + # 设置柱子颜色
+  labs(
+    x = "Nucleotide Position (3' -> 5')",
+    y = "MS Intensity Ratio",
+    title = ""
+  ) +
+  theme_classic() + # 使用简洁主题
+  theme(
+    axis.text.x = element_blank(),
+    panel.grid = element_blank(), 
+    panel.border = element_blank() 
+  )+ 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 2.7)) +
+  scale_x_discrete(expand = c(0.1, 0.1)) 
+
+
+ggplot(figure3a_df, aes(x = as.numeric(ratio))) +
+  geom_histogram(
+    binwidth = 0.1, 
+    boundary = 0,  # 从 0 开始分 bin，确保 0.7 落在 0.7-0.8 这个 bin 里
+    fill = "skyblue", 
+    color = "black", 
+    alpha = 0.7, 
+    aes(y = ..count..)
+  ) + 
+  stat_function(
+    fun = function(x, mean, sd, n, bw) {
+      dnorm(x, mean = mean, sd = sd) * n * bw
+    },
+    args = list(
+      mean = mean_ratio, 
+      sd = sd_ratio, 
+      n = nrow(figure3a_df), 
+      bw = 0.1
+    ),
+    color = "red", 
+    size = 1
+  ) + 
+  labs(
+    x = "MS Intensity Ratio",
+    y = "Frequency",
+    title = "Distribution of MS Intensity Ratios"
+  ) +
+  xlim(0, 2.5) +
+  theme_classic() +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12)) + 
+  annotate("text", x = 2, y = 9, label = "Mean = 1.032", size = 4, hjust = 0, color = "red") + 
+  annotate("text", x = 2, y = 8, label = "Variance = 0.139", size = 4, hjust = 0, color = "blue")
+
+
+```
 
