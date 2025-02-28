@@ -18,7 +18,7 @@ ppm = function(observed, theo){
 dictionary = read_xlsx("Data/dictionary.xlsx")
 ```
 
-```{r}
+```{r preparation}
 set.seed(123)  # Set a seed for reproducibility
 set_up("RNA_A", "AAACCGUUACCAUUACUGAG", "Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx", "synthetic_RNA", 6000, 0)
 prophet_A5 = prophet(df, theo_5)
@@ -62,7 +62,38 @@ sampled_df <- filtered_df %>% sample_n(100) %>%
   mutate(ladder_type = "noise", base_name = "", n_position = 1)
 
 figure1_df = rbind(prophet_all, sampled_df)
+```
 
+
+```{r step1}
+ggplot(figure1_df %>%
+  mutate(monoisotopic_mass = case_when(
+    row_number() == 19 ~ 6200,
+    row_number() == 56 ~ 6300,
+    row_number() == 92 ~ 6400,
+    TRUE ~ monoisotopic_mass # 保持其他行的值不变
+  )) %>% 
+  slice(19, 56, 92) %>% 
+    mutate(RNA_number = c("1","2","3")), aes(x = monoisotopic_mass, y = log10(sum_intensity), color = RNA_number)) +
+  geom_point(size = 5) + # Points
+  scale_color_manual(values = c("1" = "green", "2" = "deeppink3", "3" = "orange")) +
+  labs(x = "", y = "", title = "") +
+  theme_classic()+ # 使用经典主题
+  theme(
+    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
+    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
+    axis.ticks = element_blank(),
+    legend.position = "none" # 隐藏图例# 去掉 x 轴和 y 轴的刻度线
+  ) +
+  scale_x_continuous(limits = c(6100, 6450)) + # 强制 x 轴从 6100 开始
+  scale_y_continuous(limits = c(4, NA)) # 强制 y 轴从 4 开始
+
+
+
+```
+
+
+```{r step2}
 ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
   geom_point(size = 3, color = "steelblue") + # Points
   labs(x = "Monoisotopic Mass(Da)", y = "Retention Time(min)", title = "") +
@@ -82,9 +113,129 @@ ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
     axis.text.y = element_blank(), # 去掉 y 轴刻度标签
     axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
   )
+
+ggplot(figure1_df %>% 
+         slice(-c(19, 37, 56, 74)), aes(x = monoisotopic_mass, y = log10(sum_intensity))) +
+  geom_point(size = 2, color = "orangered") + # 绘制点
+  labs(x = "", y = "", title = "") + # 去掉 x 轴、y 轴和标题的标签
+  theme_classic() + # 使用经典主题
+  theme(
+    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
+    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
+    axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
+  )
 ```
 
-```{r}
+```{r step3}
+# 创建一个新列，标识第 31 行
+figure1_df <- figure1_df %>%
+  mutate(
+    color_flag = if_else(row_number() == 26, "31", "Other"), # 标识颜色
+    size_flag = if_else(row_number() == 26, 3, 2) # 标识大小
+  )
 
+# 绘制散点图
+ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt, color = color_flag, size = size_flag)) +
+  geom_point() + # 绘制点
+  labs(x = "", y = "", title = "") + # 去掉 x 轴、y 轴和标题的标签
+  theme_classic() + # 使用经典主题
+  theme(
+    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
+    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
+    axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
+  ) +
+  scale_color_manual(values = c("31" = "red", "Other" = "steelblue")) + # 手动指定颜色
+  scale_size_identity() + # 直接使用 size_flag 的值作为点的大小
+  guides(color = "none", size = "none") # 隐藏图例
+```
+
+```{r step4}
+
+
+data <- data.frame(
+  x = factor(c(1:8, 9)),  
+  label = c("U", "G", "C", "A", "U", "A", "C", "G", ""), 
+  height = c(4, 6, 10, 7, 5, 6, 8, 5, 0) 
+)
+
+
+ggplot(data, aes(x = x, y = height)) +
+  geom_col(fill = c(rep("green", 8), "white"), color = c(rep("black", 8), "white"), width = 1) +  
+  geom_text(aes(label = label), vjust = -0.5, size = 8, color = "black") + 
+  labs(x = "", y = "", title = "") + 
+  theme_classic() + 
+  theme(
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(), 
+    panel.border = element_blank() 
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12))+ 
+  scale_x_discrete(expand = c(0.2, 0.5)) 
+
+data <- data.frame(
+  x = factor(c(1:9, 10)),  
+  label = c("A", "C", "C", "G", "G", "G", "U", "A", "A", ""),
+  height = c(6, 5, 7, 10, 5, 8, 6, 5, 4, 0)  
+)
+
+
+ggplot(data, aes(x = x, y = height)) +
+  geom_col(fill = "deeppink3", color = "black", width = 1) + 
+  geom_text(aes(label = label), vjust = -0.5, size = 9, color = "black") + 
+  labs(x = "", y = "", title = "") + 
+  theme_classic() +
+  theme(
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(), 
+    panel.border = element_blank() 
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12))+ 
+  scale_x_discrete(expand = c(0.2, 0.5))
+
+data <- data.frame(
+  x = factor(c(1:8, 9)),  
+  label = c("G", "C", "C", "A", "U", "U", "A", "C", ""),
+  height = c(5, 4, 5, 6, 10, 7, 6, 7, 0)  
+)
+
+ggplot(data, aes(x = x, y = height)) +
+  geom_col(fill = c(rep("orange", 8), "white"), color = c(rep("black", 8), "white"), width = 1) + 
+  geom_text(aes(label = label), vjust = -0.5, size = 8, color = "black") + 
+  labs(x = "", y = "", title = "") + 
+  theme_classic() +
+  theme(
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(), 
+    panel.border = element_blank() 
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12))+ 
+  scale_x_discrete(expand = c(0.2, 0.5))
+
+data <- data.frame(
+  x = factor(c(1:8, 9)),  
+  label = c("A", "U", "U", "A", "C", "G", "A", "G", ""),
+  height = c(6, 5, 7, 9, 7, 8, 6, 4, 0)  
+)
+
+ggplot(data, aes(x = x, y = height)) +
+  geom_col(fill = c(rep("orange", 8), "white"), color = c(rep("black", 8), "white"), width = 1) + 
+  geom_text(aes(label = label), vjust = -0.5, size = 8, color = "black") + 
+  labs(x = "", y = "", title = "") + 
+  theme_classic() +
+  theme(
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(), 
+    panel.border = element_blank() 
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12))+ 
+  scale_x_discrete(expand = c(0.2, 0.5))
 ```
 
