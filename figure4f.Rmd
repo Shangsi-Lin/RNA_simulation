@@ -67,10 +67,6 @@ fig
 ```
 
 ```{r}
-library(plotly)
-library(dplyr)
-
-# Assuming your data frame is called df
 df <- df %>%
   group_by(RNA_type) %>%
   mutate(
@@ -197,9 +193,12 @@ plot
 
 ```{r}
 df = read_xlsx("Data/sgRNA/Figure4/separation_simulation.xlsx")
+
+df <- df %>% 
+  mutate(log_intensity = log(sum_intensity)) %>% 
+  arrange(monoisotopic_mass) %>% 
+  mutate(apex_rt = 0.00611 * monoisotopic_mass + runif(n(), min = -5, max = 5))
 tibble(df)
-df = df %>% 
-  mutate(log_intensity = log(sum_intensity))
 ```
 
 ```{r}
@@ -326,4 +325,62 @@ plot <- plot %>%
 # Display the plot
 plot
 ```
+
+
+```{r figure4b}
+figure4b_intact_df = read_xlsx("Data/sgRNA/20nt_data/20ntRNA134_931_intact.xlsx") %>% 
+  drop_na() %>% 
+  janitor::clean_names() %>% 
+  select(monoisotopic_mass, apex_rt, sum_intensity) %>% 
+  slice(2, 6, 29)
+#42606080.19/9 = 4734009 let RNA-A be 9 portions
+#14241590.89/4734009 = 3.008357
+#2857453.47/4734009 = 0.604
+
+data <- data.frame(
+  RNA = c("RNA-A", "RNA-B", "RNA-C", "Internal"),
+  Relative_Intensity = c(9, 3.095, 0.850, 0.101)
+)
+
+# Generate the bar plot
+ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
+  labs(
+    title = "",
+    x = NULL,
+    y = "Relative Intensity"
+  ) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red", "Internal" = "yellow")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  )
+
+data$RNA <- factor(data$RNA, levels = data$RNA[order(-data$Relative_Intensity)])
+
+ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
+  labs(
+    title = "",
+    x = NULL,
+    y = "Relative Intensity"
+  ) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red", "Internal" = "yellow")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  )
+
+```
+
 

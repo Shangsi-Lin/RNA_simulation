@@ -69,8 +69,8 @@ ggplot(figure3a_df, aes(x = as.numeric(ratio))) +
       dnorm(x, mean = mean, sd = sd) * n * bw
     },
     args = list(
-      mean = mean_ratio, 
-      sd = sd_ratio, 
+      mean = mean, 
+      sd = sd, 
       n = nrow(figure3a_df), 
       bw = 0.1
     ),

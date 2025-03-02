@@ -239,3 +239,5 @@ ggplot(data, aes(x = x, y = height)) +
   scale_x_discrete(expand = c(0.2, 0.5))
 ```
 
+
+
