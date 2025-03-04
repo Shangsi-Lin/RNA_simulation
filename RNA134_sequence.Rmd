@@ -173,9 +173,51 @@ source("plotting.R")
 test = read_xlsx("Result/sgRNA/figure4/RNA-B_layers_found.xlsx") %>% 
   filter(position_5 != 1)
 plot_depth(test, c(0))
+RNA_A_depth = read_xlsx("Result/sgRNA/figure4/RNA-A_layers_found.xlsx") %>%
+    add_count(position_5, name = "count_appearances") %>% 
+    distinct(position_5, .keep_all = TRUE) %>% 
+    select(position_5, count_appearances) %>% 
+    arrange(position_5) %>% 
+    filter(!position_5 %in% c(1)) %>% 
+  mutate(RNA_type = "A")
+RNA_B_depth = read_xlsx("Result/sgRNA/figure4/RNA-B_layers_found.xlsx") %>%
+    add_count(position_5, name = "count_appearances") %>% 
+    distinct(position_5, .keep_all = TRUE) %>% 
+    select(position_5, count_appearances) %>% 
+    arrange(position_5) %>% 
+    filter(!position_5 %in% c(1)) %>% 
+  mutate(RNA_type = "B")
+RNA_C_depth = read_xlsx("Result/sgRNA/figure4/RNA-C_layers_found.xlsx") %>%
+    add_count(position_5, name = "count_appearances") %>% 
+    distinct(position_5, .keep_all = TRUE) %>% 
+    select(position_5, count_appearances) %>% 
+    arrange(position_5) %>% 
+    filter(!position_5 %in% c(1)) %>% 
+  mutate(RNA_type = "C")
+depth_df = rbind(RNA_A_depth, RNA_B_depth, RNA_C_depth)
+
+
+ggplot(depth_df, aes(x = position_5, y = count_appearances, fill = RNA_type)) +
+  geom_bar(stat = "identity", position = "dodge") +  # 绘制柱状图
+  scale_fill_manual(values = c("A" = "blue", "B" = "green", "C"="red")) +  # 手动设置颜色
+  labs(
+    x = "Position",
+    y = "Depth",
+    fill = "RNA Type"
+  ) +
+  scale_x_continuous(breaks = seq(0, 20, by = 4), limits = c(0, 20)) +  # x 轴从 1 到 20
+  scale_y_continuous(breaks = seq(0, 12, by = 3), limits = c(0, 12)) +  # y 轴从 1 到 12，不显示小数
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14, color = "black"),  # 设置文本大小和颜色
+    axis.title = element_text(color = "black"),  # 轴标题黑色
+    axis.text = element_text(color = "black"),  # 轴刻度黑色
+    legend.text = element_text(color = "black"),  # 图例文本黑色
+    legend.title = element_text(color = "black")  # 图例标题黑色
+  )
 ```
 
-```{r native_ladders}
+```{r native_ladders, fig.width=7,fig.height=6}
 temp = read_xlsx("Result/sgRNA/figure4/RNAABC_native_ladders.xlsx") %>% 
   select(base_name, monoisotopic_mass, apex_rt, sum_intensity, RNA_type, shape) %>% 
   mutate(log_intensity = log10(sum_intensity))

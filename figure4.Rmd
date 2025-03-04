@@ -335,7 +335,7 @@ plot
 
 
 
-```{r figure4b}
+```{r figure4b, fig.width=3,fig.height=6}
 figure4b_intact_df = read_xlsx("Data/sgRNA/20nt_data/20ntRNA134_931_intact.xlsx") %>% 
   drop_na() %>% 
   janitor::clean_names() %>% 
