@@ -22,11 +22,8 @@ library(viridisLite) #provide the turbo 256 color scale
 
 ```{r}
 df = read_xlsx("Data/sgRNA/Figure4/20mer_layers.xlsx")
-tibble(df)
 df = df %>% 
   mutate(log_intensity = log(sum_intensity))
-
-print(df, n = 105)
 
 highest_points <- df %>%
   group_by(RNA_type) %>%
@@ -61,12 +58,10 @@ fig <- fig %>%
     showlegend = FALSE
   )
 
-fig
-
 
 ```
 
-```{r}
+```{r figure4a2}
 df <- df %>%
   group_by(RNA_type) %>%
   mutate(
@@ -192,17 +187,17 @@ plot
 ```
 
 ```{r}
+set.seed(123)
 df = read_xlsx("Data/sgRNA/Figure4/separation_simulation.xlsx")
 
 df <- df %>% 
   mutate(log_intensity = log(sum_intensity)) %>% 
   arrange(monoisotopic_mass) %>% 
-  mutate(apex_rt = 0.00611 * monoisotopic_mass + runif(n(), min = -5, max = 5))
+  mutate(apex_rt = 0.00611 * monoisotopic_mass + runif(n(), min = -5, max = 5), log_intensity = log_intensity+ runif(n(), min = -0.5, max = 0.5))
 tibble(df)
 ```
 
-```{r}
-# Assuming your data frame is called df
+```{r figure4a1}
 df <- df %>%
   group_by(RNA_type) %>%
   mutate(
@@ -322,9 +317,22 @@ plot <- plot %>%
     #plot_bgcolor = "lightblue" 
   )
 
-# Display the plot
+plot <- plot %>%
+  layout(
+    title = "",
+    scene = list(
+      xaxis = list(
+        title = "Monoisotopic Mass (Da)",
+        titlefont = list(size = 14, family = "Arial", weight = "bold"),
+        tickformat = ".0f"  # 确保刻度显示为整数，不带"k"
+      )
+    )
+  )
+
 plot
+
 ```
+
 
 
 ```{r figure4b}
@@ -338,28 +346,9 @@ figure4b_intact_df = read_xlsx("Data/sgRNA/20nt_data/20ntRNA134_931_intact.xlsx"
 #2857453.47/4734009 = 0.604
 
 data <- data.frame(
-  RNA = c("RNA-A", "RNA-B", "RNA-C", "Internal"),
-  Relative_Intensity = c(9, 3.095, 0.850, 0.101)
+  RNA = c("RNA-A", "RNA-B", "RNA-C"),
+  Relative_Intensity = c(9, 3.008, 0.604)
 )
-
-# Generate the bar plot
-ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
-  geom_bar(stat = "identity", color = "black", width = 0.5) +
-  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
-  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
-  labs(
-    title = "",
-    x = NULL,
-    y = "Relative Intensity"
-  ) +
-  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red", "Internal" = "yellow")) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title.y = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  )
 
 data$RNA <- factor(data$RNA, levels = data$RNA[order(-data$Relative_Intensity)])
 
@@ -372,7 +361,7 @@ ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
     x = NULL,
     y = "Relative Intensity"
   ) +
-  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red", "Internal" = "yellow")) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red")) +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
@@ -381,6 +370,52 @@ ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
     legend.position = "none"
   )
 
+#the rest of the number assigned here are calculated in Result/sgRNA/RNAABC_layers_found.xlsx
+data <- data.frame(
+  RNA = c("RNA-A", "RNA-B", "RNA-C"),
+  Relative_Intensity = c(9, 3.149, 1.090)
+)
+
+ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
+  labs(
+    title = "",
+    x = NULL,
+    y = "Relative Intensity"
+  ) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  )
+
+data <- data.frame(
+  RNA = c("RNA-A", "RNA-B", "RNA-C"),
+  Relative_Intensity = c(9, 2.433, 0.755)
+)
+
+ggplot(data, aes(x = RNA, y = Relative_Intensity, fill = RNA)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", Relative_Intensity)), vjust = -0.5, size = 5) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 1)) +
+  labs(
+    title = "",
+    x = NULL,
+    y = "Relative Intensity"
+  ) +
+  scale_fill_manual(values = c("RNA-A" = "blue", "RNA-B" = "green", "RNA-C" = "red")) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  )
 ```
 
 

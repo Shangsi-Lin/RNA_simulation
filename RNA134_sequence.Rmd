@@ -1,0 +1,255 @@
+---
+title: "RNA134_analysis"
+author: "Shangsi Lin"
+date: "2025-02-18"
+output: html_document
+---
+
+Welcome to the nested pro program, go ahead and start clicking.
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Add the function for ppm calculation
+ppm = function(observed, theo){
+  if(abs((observed - theo) / theo * 10^6) > 10) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+
+source("introduction.R")
+source("blind_seq.R")
+
+# get your dictionary file ready
+dictionary = read_xlsx("Data/dictionary.xlsx") %>% 
+  rename(name = base_name, mass = monoisotopic_mass)
+```
+
+```{r, echo = FALSE, warning=FALSE}
+# first variable: the name of your sample
+# second variable: sequence of your sample(for RNA, it is 5')
+# third variable: data file location
+# fourth variable: sample type(synthetic_RNA/natural_RNA/peptide)
+# fifth variable: the intact mass limit for your sample(ex. >= 24000Da)
+# sixth variable: the number of interval detected lower limit set for filtering purpose 
+
+#RNA-A: AAACCGUUACCAUUACUGAG
+#RNA-B: UAUUCAAGUUACACUCAAGA
+#RNA-C: GCGUACAUCUUCCCCUUUAU
+
+set_up("RNA-C", "GCGUACAUCUUCCCCUUUAU", "Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx", "synthetic_RNA", 6000, 0)
+df = df %>% 
+  filter(monoisotopic_mass <= 6450)
+
+prophet_5 = prophet(df, theo_5) #this will be the data frame for matching result, name it whatever you want
+prophet_3 = prophet(df, theo_3) #this will be the data frame for matching result, name it whatever you want
+
+#dictionary = dictionary[c(1, 2, 3, 4, 5, 7, 8, 9, 10, 12),]
+dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if you want to restrict choice range
+
+# first variable: your data frame
+# second variable: your dictionary
+algorithm_output = blind_seq(df, dictionary)
+```
+
+```{r general_2D_plots, echo = FALSE, warning=FALSE}
+source("plotting.R")
+# first variable: your data frame
+# second variable: whether you want the points to be labeled with mass or not(TRUE/FALSE)
+# third vairable: time limit for your plot(usually depends on your method settin of MS)
+plot_mass_rt(df, TRUE, 25)
+plot_mass_rt(intact_df, TRUE, 25)
+
+# first variable: your data frame
+# second variable: whether you want the points to be labeled with mass or not(TRUE/FALSE)
+plot_mass_intensity(df, TRUE)
+plot_mass_intensity(intact_df, TRUE)
+
+# first variable: data frame of matching result
+# second variable: your ladder type("5"/"3"/"N"/"C")
+mass_match_table(prophet_5, "5")
+mass_match_table(prophet_3, "3")
+
+# first variable: sample name
+# second variable: intact mass of the sample
+# third variable: location of the data file
+# fourth variable: upper bound of your defined intact mass region
+# fifth variable: lower bound of your defined intact mass region
+homology_search(sample_name, intact_weight, file_location, 6450, 6000)
+homology_search(sample_name, 6316.8762, file_location, 6450, 6000)
+homology_search(sample_name, 6198.7881, file_location, 6450, 6000)
+
+# first variable: your matched data frame
+# second variable: the name of the ladder you matched to
+plot_prophet(prophet_5, "5'")
+plot_prophet(prophet_3, "3'")
+
+# first variable: first data frame for mass matching result
+# second variable: second data frame for mass matching result
+# third variable: name of the first ladder being used for matching
+# fourth variable: name of the second ladder being used for matching
+plot_position_abundance(prophet_5, prophet_3, "5' ladder", "3' ladder")
+```
+
+```{r blind_seq_result, echo = FALSE, warning=FALSE}
+if(nrow(algorithm_output) != 0){
+# first variable: the output data frame from nested algorithm
+# second variable: the minimum length for ladders you want to include in your result file
+# third variable: the location of your original data file
+output_ladders_found(algorithm_output, 3, file_location)
+
+# first variable: the point version result file location
+plot_ladders("Result/blind_sequencing_result_point_version.xlsx")
+} else {
+  print("There is no ladder generated from this dataset.")
+}
+
+write_xlsx(theo_5, "theo5_RNA_C.xlsx")
+write_xlsx(theo_3, "theo3_RNA_C.xlsx")
+```
+
+```{r adduct_finder}
+# Example: here we try to find the 5' ladder with sodium adduct
+# First variable: the data frame from experiment
+# Scond variable: the data frame of theoretical mass ladder
+# Third variable: the mass of your adduct(a numeric variable)
+# Fourth variable: the name of your adduct(a string varaible)
+theoA_3 = theo_creater(df, theo_3, 0, "RNA-C native 3'", 20, FALSE)
+theoA_3_K = theo_creater(df, theo_3, 37.9390, "K adducted RNA-C 3'", 20, FALSE)
+theoA_3_Na = theo_creater(df, theo_3, 21.9731, "Na adducted RNA-C 3'", 20, FALSE)
+theoA_3_2Na1K = theo_creater(df, theo_3, 81.90236, "2Na1K adducted RNA-C 3'", 20, FALSE)
+theoA_3_NaK = theo_creater(df, theo_3, 59.90999, "NaK adducted RNA-C 3'", 20, FALSE)
+theoA_3_triethylamine = theo_creater(df, theo_3, 101.1059, "triethylamine adducted RNA-C 3'", 20, FALSE)
+theoA_5 = theo_creater(df, theo_5, 0, "RNA-C native 5'", 20, TRUE)
+theoA_5_H2O = theo_creater(df, theo_5, -18.02726, "dehydrated RNA-C 5'", 20, TRUE)
+theoA_5_K = theo_creater(df, theo_5, 37.9390, "K adducted RNA-C 5'", 20, TRUE)
+theoA_5_Na = theo_creater(df, theo_5, 21.9731, "Na adducted RNA-C 5'", 20, TRUE)
+theoA_5_2Na1K = theo_creater(df, theo_5, 81.90236, "2Na1K adducted RNA-C 5'", 20, TRUE)
+theoA_5_NaK = theo_creater(df, theo_5, 59.90999, "NaK adducted RNA-C 5'", 20, TRUE)
+theoA_5_triethylamine = theo_creater(df, theo_5, 101.1059, "triethylamine adducted RNA-C 5'", 20, TRUE)
+
+temp_df = rbind(theoA_3, theoA_3_K, theoA_3_Na, theoA_3_2Na1K, theoA_3_NaK, theoA_3_triethylamine, theoA_5, theoA_5_H2O, theoA_5_K, theoA_5_Na, theoA_5_2Na1K, theoA_5_NaK, theoA_5_triethylamine)
+write_xlsx(temp_df, "RNA-C_layers_found.xlsx")
+```
+
+```{r native3_and5_ladders, fig.width=12, fig.height=7}
+temp = read_xlsx("Result/Scott/25Feb_analysis/PylF2/PylF2_5min_5i_plotting.xlsx")
+plot_natives(temp, c(2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 25000), c(2, 4, 6, 8, 10, 12, 14))
+```
+
+```{r all_Pyl_F2_adduct_ladders, fig.width=15, fig.height=7}
+palette = read_xlsx("Result/Scott/25Feb_analysis/PylF2/PylF2_adduct_finder_final.xlsx") %>% 
+  select(monoisotopic_mass, apex_rt, ladder_type) %>% 
+  drop_na() %>% 
+  filter(!ladder_type %in% c("native 3'", "native 5'"))
+ggplot(palette, aes(x = monoisotopic_mass, y = apex_rt, color = ladder_type)) +
+  geom_line(aes(group = ladder_type),color = "gray", size = 1) +
+  geom_point(
+        alpha=0.9,
+        size=3) +
+  theme_bw() +
+  labs(
+    x = "Monoisotopic Mass(Da)",
+    y = "Rentention Time(min)"
+  ) +
+  theme(plot.title = element_text(
+      size = 14,        
+      face = "bold",    
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    )
+  ) +
+  scale_x_continuous(
+    breaks = c(2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500),
+    limits = c(1500, 24000)
+  ) +
+  scale_y_continuous(
+    breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+  )
+```
+
+```{r depth}
+source("plotting.R")
+test = read_xlsx("Result/sgRNA/figure4/RNA-B_layers_found.xlsx") %>% 
+  filter(position_5 != 1)
+plot_depth(test, c(0))
+```
+
+```{r branching, fig.width=13, fig.height=8}
+palette = read_xlsx("Result/Scott/25Feb_analysis/PylF2/PylF2_homology_search.xlsx") 
+plot_homology(palette, c("M1" = "red", "M2" = "blue", "M3" = "green"))
+```
+
+```{r branching_all, fig.width=15, fig.height=7}
+palette = read_xlsx("Result/Scott/25Feb_analysis/PylF2/PylF2_adduct_finder_final.xlsx") %>% 
+  select(monoisotopic_mass, apex_rt, ladder_type) %>% 
+  drop_na() %>% 
+  filter(ladder_type %in% c("native 3'", "i6A 3'", "ms2i6A 3'")) %>% 
+  slice(-c(1, 24, 111)) %>% 
+  filter(monoisotopic_mass > 11000 & monoisotopic_mass < 20000)
+
+palette2 = read_xlsx("Result/Scott/25Feb_analysis/PylF2/PylF2_adduct_finder_final.xlsx") %>% 
+  select(monoisotopic_mass, apex_rt, ladder_type) %>% 
+  drop_na() %>% 
+  filter(ladder_type %in% c("native 5'", "i6A 5'", "ms2i6A 5'")) %>% 
+  slice(-c(1, 2)) 
+
+palette_full = rbind(palette, palette2)
+
+ggplot(palette2, aes(x = monoisotopic_mass, y = apex_rt, color = ladder_type)) +
+  geom_line(aes(group = ladder_type),color = "gray", size = 1) +
+  geom_point(
+        alpha=0.9,
+        size=3) +
+  theme_bw() +
+  labs(
+    x = "Monoisotopic Mass(Da)",
+    y = "Rentention Time(min)"
+  ) +
+  theme(plot.title = element_text(
+      size = 14,        
+      face = "bold",    
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    )
+  ) +
+  scale_x_continuous(
+    breaks = c(2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500),
+    limits = c(10000, 20000)
+  ) +
+  scale_y_continuous(
+    breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 19),
+    limits = c(12, 18)
+  )
+
+ggplot(palette_full, aes(x = monoisotopic_mass, y = apex_rt, color = ladder_type)) +
+  geom_line(aes(group = ladder_type),color = "gray", size = 1) +
+  geom_point(
+        alpha=0.9,
+        size=3) +
+  theme_bw() +
+  labs(
+    x = "Monoisotopic Mass(Da)",
+    y = "Rentention Time(min)"
+  ) +
+  theme(plot.title = element_text(
+      size = 14,        
+      face = "bold",    
+      hjust = 0.5       # Horizontal justification (0 = left, 0.5 = center, 1 = right)
+    )
+  ) +
+  scale_x_continuous(
+    breaks = c(2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500),
+    limits = c(10000, 20000)
+  ) +
+  scale_y_continuous(
+    breaks = c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20),
+    limits = c(11, 19)
+  )
+
+plot_chosen_layers(palette_full, c("native 5'", "i6A 5'", "ms2i6A 5'"), 
+                   c(2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500), 
+                   c(2, 4, 6, 8, 10, 12, 14, 16, 18, 19), 
+                   c(10000, 20000), 
+                   c(12, 18))
+```
+
