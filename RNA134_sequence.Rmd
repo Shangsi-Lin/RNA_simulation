@@ -175,7 +175,37 @@ test = read_xlsx("Result/sgRNA/figure4/RNA-B_layers_found.xlsx") %>%
 plot_depth(test, c(0))
 ```
 
-```{r branching, fig.width=13, fig.height=8}
+```{r native_ladders}
+temp = read_xlsx("Result/sgRNA/figure4/RNAABC_native_ladders.xlsx") %>% 
+  select(base_name, monoisotopic_mass, apex_rt, sum_intensity, RNA_type, shape) %>% 
+  mutate(log_intensity = log10(sum_intensity))
+
+ggplot(temp, aes(x = monoisotopic_mass, y = apex_rt, color = log_intensity, shape = shape)) +  # 连接点并按颜色映射
+  geom_line(aes(group = shape), linewidth = 0.8, color = "black") + 
+  geom_point(size = 3) +  # 绘制点
+  geom_text_repel(aes(label = base_name), size = 3, color = "black", box.padding = 0.3) +  # 避免标签重叠，调整距离
+  scale_color_gradientn(colors = turbo(256)) +  # 颜色映射 log_intensity
+  facet_wrap(~RNA_type, scales = "free_x", ncol = 1) +  # 共享 x 轴，y 轴固定
+  labs(
+    x = "Monoisotopic Mass (Da)",
+    y = "Apex RT (min)",
+    shape = "Ladder Type",  # 修改 shape 图例标题
+    color = "Log(Intensity)"  # 修改 color 图例标题为 Log(Intensity)
+  ) +  
+  ylim(0, 18) +  # 强制 y 轴范围 0 到 18
+  theme_minimal() + 
+  theme(
+    text = element_text(size = 14, color = "black"),  # 所有文本默认黑色
+    axis.title = element_text(color = "black"),  # 坐标轴标题黑色
+    axis.text = element_text(color = "black"),  # 坐标轴刻度黑色
+    strip.text = element_text(size = 14, color = "black"),  # facet 标签黑色
+    legend.text = element_text(color = "black"),  # 图例文本黑色
+    legend.title = element_text(color = "black")  # 图例标题黑色
+  )
+```
+
+
+```{r homology, fig.width=13, fig.height=8}
 palette = read_xlsx("Result/Scott/25Feb_analysis/PylF2/PylF2_homology_search.xlsx") 
 plot_homology(palette, c("M1" = "red", "M2" = "blue", "M3" = "green"))
 ```
