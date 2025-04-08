@@ -19,6 +19,8 @@ dictionary = read_xlsx("Data/dictionary.xlsx")
 ```
 
 ```{r preparation}
+#ggsave("3prime_Val_t6A_plot.pdf", plot_threePrime, width = 10, height = 8, device = cairo_pdf)
+
 set.seed(123)  # Set a seed for reproducibility
 set_up("RNA_A", "AAACCGUUACCAUUACUGAG", "Data/sgRNA/20nt_data/20ntRNA_134_931_hydrolysis_5uL_5 min_injection.xlsx", "synthetic_RNA", 6000, 0)
 prophet_A5 = prophet(df, theo_5)
@@ -56,7 +58,7 @@ prophet_all = rbind(prophet_A3, prophet_A5, prophet_B3, prophet_B5, prophet_C3, 
 filtered_df <- df%>%
   filter(!monoisotopic_mass %in% prophet_all$monoisotopic_mass) %>% 
   filter(monoisotopic_mass < 6400) %>% 
-  filter(sum_intensity < 100000)
+  filter(sum_intensity < 100000) #intensity less than 100000, excluding ladder points
 
 sampled_df <- filtered_df %>% sample_n(100) %>% 
   mutate(ladder_type = "noise", base_name = "", n_position = 1)
@@ -65,7 +67,7 @@ figure1_df = rbind(prophet_all, sampled_df)
 ```
 
 
-```{r step1}
+```{r step1, eval=FALSE, include=FALSE}
 ggplot(figure1_df %>%
   mutate(monoisotopic_mass = case_when(
     row_number() == 19 ~ 6200,
@@ -94,62 +96,322 @@ ggplot(figure1_df %>%
 
 
 ```{r step2}
-ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
-  geom_point(size = 3, color = "steelblue") + # Points
-  labs(x = "Monoisotopic Mass(Da)", y = "Retention Time(min)", title = "") +
-  theme_classic()
+data <- prophet_all %>% slice(-c(19, 37, 56, 74))
 
-ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
-  geom_point(size = 2, color = "steelblue") + # Points
-  labs(x = "", y = "", title = "") +
-  theme_classic()
+# 绘制 3D 散点图
+plot_ly(data, x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+               type = "scatter3d", mode = "markers",
+               marker = list(size = 4, color = "#20B2AA"))
 
-ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt)) +
-  geom_point(size = 2, color = "steelblue") + # 绘制点
-  labs(x = "", y = "", title = "") + # 去掉 x 轴、y 轴和标题的标签
-  theme_classic() + # 使用经典主题
-  theme(
-    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
-    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
-    axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
+# 保存为 PDF
+pdf("3d_plot_ggplot_style.pdf", width = 8, height = 6)
+
+plot_ly(
+  data,
+  x = ~monoisotopic_mass,
+  y = ~apex_rt,
+  z = ~sum_intensity,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    size = 4,
+    color = "#A98BDB",
+    line = list(width = 0)  # 移除标记边框
   )
+) %>%
+layout(
+  scene = list(
+    # 完全隐藏所有坐标轴
+    xaxis = list(visible = FALSE),
+    yaxis = list(visible = FALSE),
+    zaxis = list(visible = FALSE),
+    
+    # 透明背景设置
+    bgcolor = 'rgba(0,0,0,0)',
+    
+    # 移除3D场景的所有装饰
+    camera = list(
+      up = list(x = 0, y = 0, z = 1),
+      center = list(x = 0, y = 0, z = 0),
+      eye = list(x = 1.25, y = 1.25, z = 1.25)
+    )
+  ),
+  
+  # 全局透明设置
+  paper_bgcolor = 'rgba(0,0,0,0)',
+  plot_bgcolor = 'rgba(0,0,0,0)',
+  
+  # 移除所有边距
+  margin = list(l = 0, r = 0, b = 0, t = 0)
+)
 
-ggplot(figure1_df %>% 
-         slice(-c(19, 37, 56, 74)), aes(x = monoisotopic_mass, y = log10(sum_intensity))) +
-  geom_point(size = 2, color = "orangered") + # 绘制点
-  labs(x = "", y = "", title = "") + # 去掉 x 轴、y 轴和标题的标签
-  theme_classic() + # 使用经典主题
-  theme(
-    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
-    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
-    axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
+plot_ly(
+  data,
+  x = ~monoisotopic_mass,
+  y = ~apex_rt,
+  z = ~sum_intensity,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    size = 6,
+    color = "#A98BDB",
+    line = list(
+      width = 1,  # Border width
+      color = "black"  # Border color
+    )
   )
+) %>%
+layout(
+  scene = list(
+    # Completely hide all axes
+    xaxis = list(visible = FALSE),
+    yaxis = list(visible = FALSE),
+    zaxis = list(visible = FALSE),
+    
+    # Transparent background setting
+    bgcolor = 'rgba(0,0,0,0)',
+    
+    # Remove all 3D scene decorations
+    camera = list(
+      up = list(x = 0, y = 0, z = 1),
+      center = list(x = 0, y = 0, z = 0),
+      eye = list(x = 1.25, y = 1.25, z = 1.25)
+    )
+  ),
+  
+  # Global transparency settings
+  paper_bgcolor = 'rgba(0,0,0,0)',
+  plot_bgcolor = 'rgba(0,0,0,0)',
+  
+  # Remove all margins
+  margin = list(l = 0, r = 0, b = 0, t = 0)
+)
+
 ```
 
 ```{r step3}
 # 创建一个新列，标识第 31 行
 figure1_df <- figure1_df %>%
   mutate(
-    color_flag = if_else(row_number() == 26, "31", "Other"), # 标识颜色
-    size_flag = if_else(row_number() == 26, 3, 2) # 标识大小
+    color_flag = if_else(row_number() == 8, "8", "Other"), 
+    size_flag = if_else(row_number() == 26, 3, 2) 
   )
 
-# 绘制散点图
-ggplot(figure1_df, aes(x = monoisotopic_mass, y = apex_rt, color = color_flag, size = size_flag)) +
-  geom_point() + # 绘制点
-  labs(x = "", y = "", title = "") + # 去掉 x 轴、y 轴和标题的标签
-  theme_classic() + # 使用经典主题
-  theme(
-    axis.text.x = element_blank(), # 去掉 x 轴刻度标签
-    axis.text.y = element_blank(), # 去掉 y 轴刻度标签
-    axis.ticks = element_blank() # 去掉 x 轴和 y 轴的刻度线
+ggplot(figure1_df %>% slice(-c(19, 37, 56, 74)), aes(x = monoisotopic_mass, y = sum_intensity, size = 3)) +
+  geom_point(color = "black", fill = "#5FAFD6", alpha = 0.8, shape = 21, stroke = 0.8) +  
+  theme_void() +
+  guides(color = "none", size = "none") 
+
+figure1_df <- figure1_df %>%
+  mutate(intensity_rank = rank(-sum_intensity, ties.method = "first"))
+
+ggplot(figure1_df %>% slice(-c(19, 37, 56, 74)), 
+       aes(x = monoisotopic_mass, y = sum_intensity, size = 3)) +
+  geom_point(aes(fill = ifelse(intensity_rank %in% c("5", "6", "15"), "#A98BDB", "red")), 
+             color = "black", alpha = 0.8, shape = 21, stroke = 0.8) +  
+  theme_void() +
+  guides(color = "none", size = "none", fill = "none") 
+
+ggplot(figure1_df %>% slice(-c(19, 37, 56, 74)), 
+       aes(x = monoisotopic_mass, y = sum_intensity, size = 3)) +
+  geom_point(aes(fill = ifelse(intensity_rank %in% c(5, 6, 15, 40, 18, 183), "#A98BDB", "red")), 
+             color = "black", alpha = 0.8, shape = 21, stroke = 0.8) +  
+  theme_void() +
+  guides(color = "none", size = "none", fill = "none")
+
+figure1_df <- figure1_df %>%
+  mutate(color_group = case_when(
+    intensity_rank %in% c(5, 6, 15, 40, 18, 183) ~ "red",
+    intensity_rank %in% c(7, 25, 30, 96, 21, 32) ~ "green",
+    intensity_rank %in% c(29, 8, 9, 10, 11, 22) ~ "yellow",
+    TRUE ~ "default"
+  ))
+
+ggplot(figure1_df %>% slice(-c(19, 37, 56, 74)), 
+       aes(x = monoisotopic_mass, y = sum_intensity)) +
+  geom_point(aes(fill = color_group),
+             size = 4, color = "black", alpha = 0.8, shape = 21, stroke = 0.8) +
+  scale_fill_manual(
+    values = c("red" = "#FF4C4C", "green" = "green", "yellow" = "#FFD700", "default" = "#5FAFD6")
   ) +
-  scale_color_manual(values = c("31" = "red", "Other" = "steelblue")) + # 手动指定颜色
-  scale_size_identity() + # 直接使用 size_flag 的值作为点的大小
-  guides(color = "none", size = "none") # 隐藏图例
+  theme_void() +
+  guides(color = "none", size = "none", fill = "none")
+
+ggplot(figure1_df %>% slice(-c(19, 37, 56, 74)) %>% 
+         filter(intensity_rank %in% c(5, 6, 15, 40, 18, 183, 7, 25, 30, 96, 21, 32, 29, 8, 9, 10, 11, 22)), 
+       aes(x = monoisotopic_mass, y = sum_intensity)) +
+  geom_point(aes(fill = color_group),
+             size = 4, color = "black", alpha = 0.8, shape = 21, stroke = 0.8) +
+  scale_fill_manual(
+    values = c("red" = "#FF4C4C", "green" = "green", "yellow" = "#FFD700", "default" = "#5FAFD6")
+  ) +
+  theme_void() +
+  guides(color = "none", size = "none", fill = "none")
+
+plot_data <- figure1_df %>%
+  slice(-c(19, 37, 56, 74)) %>%
+  filter(intensity_rank %in% c(5, 6, 15, 40, 18, 183, 7, 25, 30, 96, 21, 32, 29, 8, 9, 10, 11, 22)) %>%
+  arrange(color_group, monoisotopic_mass)  
+
+
+ggplot(plot_data, aes(x = monoisotopic_mass, y = sum_intensity)) +
+
+  geom_path(aes(group = color_group), color = "gray70", linewidth = 0.8) +
+  
+
+  geom_point(aes(fill = color_group),
+             size = 4, color = "black", alpha = 0.8, shape = 21, stroke = 0.8) +
+  
+
+  scale_fill_manual(
+    values = c("red" = "#FF4C4C", "green" = "green", "yellow" = "#FFD700", "default" = "#5FAFD6")
+  ) +
+  
+  theme_void() +
+  guides(color = "none", size = "none", fill = "none")
+
+library(ggplot2)
+library(dplyr)
+
+
+plot_data <- figure1_df %>%
+  slice(-c(19, 37, 56, 74)) %>%
+  filter(intensity_rank %in% c(5, 6, 15, 40, 18, 183, 7, 25, 30, 96, 21, 32, 29, 8, 9, 10, 11, 22)) %>%
+  mutate(color_group = factor(color_group, levels = c("red", "green", "yellow", "default"))) %>%
+  arrange(color_group, monoisotopic_mass)
+
+
+ggplot(plot_data, aes(x = monoisotopic_mass, y = sum_intensity)) +
+  geom_path(aes(group = color_group), color = "gray70", linewidth = 0.8) +
+  
+  geom_point(aes(fill = color_group),
+             size = 4, color = "black", alpha = 0.8, shape = 21, stroke = 0.8) +
+
+  scale_fill_manual(
+    values = c("red" = "#FF4C4C", "green" = "green", "yellow" = "#FFD700", "default" = "#5FAFD6"),
+    labels = c("red" = "layer1", "green" = "layer2", "yellow" = "layer3", "default" = "")
+  ) +
+  
+  theme_void() +
+  guides(color = "none", size = "none", fill = guide_legend(title = NULL))
+
+
+temp <- figure1_df %>%
+  mutate(RNA_type = case_when(
+    ladder_type == "A5" ~ "A",
+    ladder_type == "B5" ~ "B",
+    ladder_type == "C5" ~ "C",
+    TRUE ~ NA_character_  
+  )) %>% filter(RNA_type %in% c("A", "B", "C")) %>% 
+  slice(-c(18,36))
+
+color_map <- c(
+  "A" = "rgba(255,0,0,1)",     # 深红
+  "B" = "rgba(0,255,0,1)",     # 深绿
+  "C" = "rgba(255,255,0,1)"    # 深黄
+)
+
+# 创建 plotly 对象
+plot_ly() %>%
+  # 对每个 RNA_type 分别绘制线和点
+  add_trace(
+    data = temp %>% filter(RNA_type == "A") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "rgba(255,0,0,0.8)", width = 2),
+    marker = list(color = "rgba(255,0,0,0.8)", size = 4),
+    text = ~base_name,
+    name = "RNA_type A"
+  ) %>%
+  add_trace(
+    data = temp %>% filter(RNA_type == "B") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "rgba(0,255,0,0.8)", width = 2),
+    marker = list(color = "rgba(0,255,0,0.8)", size = 4),
+    text = ~base_name,
+    name = "RNA_type B"
+  ) %>%
+  add_trace(
+    data = temp %>% filter(RNA_type == "C") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "rgba(255,255,0,0.8)", width = 2),
+    marker = list(color = "rgba(255,255,0,0.8)", size = 4),
+    text = ~base_name,
+    name = "RNA_type C"
+  ) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      yaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      zaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE)
+    ),
+    showlegend = TRUE
+  )
+
+plot_ly() %>%
+  # RNA_type A
+  add_trace(
+    data = temp %>% filter(RNA_type == "A") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(255,0,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)  # 灰色描边
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(255,0,0,0.8)"),
+    name = "RNA specie A"
+  ) %>%
+  # RNA_type B
+  add_trace(
+    data = temp %>% filter(RNA_type == "B") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(0,255,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(0,255,0,0.8)"),
+    name = "RNA specie B"
+  ) %>%
+  # RNA_type C（改为橘色）
+  add_trace(
+    data = temp %>% filter(RNA_type == "C") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(255,165,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(255,165,0,0.8)"),
+    name = "RNA specie C"
+  ) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      yaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      zaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE)
+    ),
+    showlegend = TRUE
+  )
+
+
 ```
 
-```{r step4}
+```{r step4, eval=FALSE, include=FALSE}
 
 
 data <- data.frame(
@@ -239,5 +501,7 @@ ggplot(data, aes(x = x, y = height)) +
   scale_x_discrete(expand = c(0.2, 0.5))
 ```
 
+```{r}
 
+```
 
