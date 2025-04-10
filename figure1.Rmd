@@ -408,7 +408,115 @@ plot_ly() %>%
     showlegend = TRUE
   )
 
+plot_ly() %>%
+  # RNA_type A
+  add_trace(
+    data = temp %>% filter(RNA_type == "A") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(255,0,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(255,0,0,1.0)"),  # 更鲜艳的红
+    name = "RNA specie A"
+  ) %>%
+  # RNA_type B
+  add_trace(
+    data = temp %>% filter(RNA_type == "B") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(0,255,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(0,255,0,1.0)"),  # 更鲜艳的绿
+    name = "RNA specie B"
+  ) %>%
+  # RNA_type C
+  add_trace(
+    data = temp %>% filter(RNA_type == "C") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(255,165,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(255,165,0,1.0)"),  # 更鲜艳的橙
+    name = "RNA specie C"
+  ) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      yaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      zaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE)
+    ),
+    showlegend = TRUE
+  )
 
+plot_ly() %>%
+  # RNA_type A
+  add_trace(
+    data = temp %>% filter(RNA_type == "A") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(255,0,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(255,0,0,1.0)", size = 14, family = "Arial Black"),
+    name = "RNA specie A"
+  ) %>%
+  # RNA_type B
+  add_trace(
+    data = temp %>% filter(RNA_type == "B") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(0,255,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(0,255,0,1.0)", size = 14, family = "Arial Black"),
+    name = "RNA specie B"
+  ) %>%
+  # RNA_type C
+  add_trace(
+    data = temp %>% filter(RNA_type == "C") %>% arrange(monoisotopic_mass),
+    x = ~monoisotopic_mass, y = ~apex_rt, z = ~sum_intensity,
+    type = 'scatter3d', mode = 'lines+markers+text',
+    line = list(color = "#999999", width = 2),
+    marker = list(
+      color = "rgba(255,165,0,0.8)", size = 6,
+      line = list(color = "gray", width = 2)
+    ),
+    text = ~base_name,
+    textfont = list(color = "rgba(255,165,0,1.0)", size = 14, family = "Arial Black"),
+    name = "RNA specie C"
+  ) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      yaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE),
+      zaxis = list(title = "", showbackground = FALSE, showgrid = FALSE,
+                   zeroline = FALSE, showticklabels = FALSE)
+    ),
+    showlegend = TRUE
+  )
 ```
 
 ```{r step4, eval=FALSE, include=FALSE}
