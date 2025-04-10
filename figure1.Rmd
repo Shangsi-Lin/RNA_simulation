@@ -517,6 +517,7 @@ plot_ly() %>%
     ),
     showlegend = TRUE
   )
+#check
 ```
 
 ```{r step4, eval=FALSE, include=FALSE}
